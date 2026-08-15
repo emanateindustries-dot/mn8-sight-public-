@@ -415,6 +415,13 @@ html.light .section-eyebrow { color: #888888 !important; }
 .label { color: var(--muted2); }
 html.light .label { color: #555555 !important; }
 </style>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPA_URL = "https://hiqejbodopdwfqwupczl.supabase.co";
+    const SUPA_KEY = "sb_publishable_8bBKmu7BNNOap_8pXVtu9A_-wYVGzpt";
+    const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
+  </script>
 </head>
 <body>
 
@@ -426,10 +433,37 @@ html.light .label { color: #555555 !important; }
       <div class="header-sub">SIGHT</div>
     </div>
   </div>
-  <button id="theme-toggle" onclick="toggleTheme()" style="background:none;border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s">
-    <span id="theme-icon" style="font-size:14px">☀️</span>
-    <span id="theme-label" style="font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;color:var(--muted2)">LIGHT</span>
-  </button>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button id="theme-toggle" onclick="toggleTheme()" style="background:none;border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .2s">
+      <span id="theme-icon" style="font-size:14px">☀️</span>
+      <span id="theme-label" style="font-family:'Montserrat',sans-serif;font-size:10px;letter-spacing:2px;color:var(--muted2)">LIGHT</span>
+    </button>
+    <button id="auth-btn" onclick="toggleAuthModal()" style="background:var(--green);color:#000;border:none;border-radius:20px;padding:4px 12px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer">SIGN IN</button>
+  </div>
+</div>
+
+<!-- Auth Modal -->
+<div id="auth-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,8,8,0.95);z-index:300;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;width:100%;max-width:360px">
+    <div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">MN8 Sight</div>
+    <div style="font-family:'Montserrat',sans-serif;font-size:11px;color:var(--muted2);margin-bottom:20px;letter-spacing:1px">Sign in to save your runs and zones</div>
+
+    <!-- Email -->
+    <input id="auth-email" type="email" placeholder="Email address"
+      style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:var(--text);box-sizing:border-box;outline:none;margin-bottom:10px">
+
+    <!-- Password -->
+    <input id="auth-password" type="password" placeholder="Password"
+      style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-family:'Montserrat',sans-serif;font-size:13px;color:var(--text);box-sizing:border-box;outline:none;margin-bottom:16px">
+
+    <!-- Buttons -->
+    <button onclick="authSignIn()" style="width:100%;background:var(--green);color:#000;border:none;border-radius:6px;padding:12px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:8px">Sign In</button>
+    <button onclick="authSignUp()" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:12px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:16px">Create Account</button>
+
+    <div id="auth-msg" style="font-family:'Montserrat',sans-serif;font-size:11px;color:var(--muted2);text-align:center;min-height:16px"></div>
+
+    <button onclick="toggleAuthModal()" style="display:block;margin:12px auto 0;background:none;border:none;font-family:'Montserrat',sans-serif;font-size:11px;color:var(--muted);cursor:pointer">Cancel</button>
+  </div>
 </div>
 
 <!-- Active Trail Bar -->
@@ -1912,6 +1946,159 @@ function setAudioSetup(type) {
   console.log('APEX audio setup: ' + type + ' (+' + apexLatencyMs[type] + 'ms compensation)');
 }
 
+// ══════════════════════════════════════════
+// SUPABASE — Auth + Data
+// ══════════════════════════════════════════
+
+var currentUser = null;
+
+// ── Auth Modal ──
+function toggleAuthModal() {
+  var modal = document.getElementById("auth-modal");
+  if(!modal) return;
+  modal.style.display = modal.style.display === "flex" ? "none" : "flex";
+}
+
+function setAuthMsg(msg, color) {
+  var el = document.getElementById("auth-msg");
+  if(el) { el.textContent = msg; el.style.color = color || "var(--muted2)"; }
+}
+
+async function authSignIn() {
+  var email = document.getElementById("auth-email").value;
+  var pass = document.getElementById("auth-password").value;
+  if(!email || !pass) { setAuthMsg("Enter email and password", "#FF3B2F"); return; }
+
+  setAuthMsg("Signing in...", "var(--muted2)");
+  var result = await supa.auth.signInWithPassword({ email: email, password: pass });
+
+  if(result.error) {
+    setAuthMsg(result.error.message, "#FF3B2F");
+  } else {
+    currentUser = result.data.user;
+    onAuthSuccess();
+  }
+}
+
+async function authSignUp() {
+  var email = document.getElementById("auth-email").value;
+  var pass = document.getElementById("auth-password").value;
+  if(!email || !pass) { setAuthMsg("Enter email and password", "#FF3B2F"); return; }
+  if(pass.length < 6) { setAuthMsg("Password must be at least 6 characters", "#FF3B2F"); return; }
+
+  setAuthMsg("Creating account...", "var(--muted2)");
+  var result = await supa.auth.signUp({ email: email, password: pass });
+
+  if(result.error) {
+    setAuthMsg(result.error.message, "#FF3B2F");
+  } else {
+    setAuthMsg("Account created! Check your email to verify.", "#1DDB7A");
+    setTimeout(function(){ toggleAuthModal(); }, 2000);
+  }
+}
+
+function onAuthSuccess() {
+  // Update UI
+  var btn = document.getElementById("auth-btn");
+  if(btn) {
+    btn.textContent = currentUser.email.split("@")[0].toUpperCase();
+    btn.style.background = "var(--green)";
+  }
+  toggleAuthModal();
+  console.log("APEX: Signed in as", currentUser.email);
+}
+
+function authSignOut() {
+  supa.auth.signOut();
+  currentUser = null;
+  var btn = document.getElementById("auth-btn");
+  if(btn) { btn.textContent = "SIGN IN"; }
+}
+
+// ── Check existing session on load ──
+document.addEventListener("DOMContentLoaded", async function() {
+  var session = await supa.auth.getSession();
+  if(session.data.session) {
+    currentUser = session.data.session.user;
+    onAuthSuccess();
+    console.log("APEX: Restored session for", currentUser.email);
+  }
+
+  // Listen for auth changes
+  supa.auth.onAuthStateChange(function(event, session) {
+    if(session) {
+      currentUser = session.user;
+      onAuthSuccess();
+    } else {
+      currentUser = null;
+    }
+  });
+});
+
+// ── Save run to Supabase ──
+async function saveRunToSupabase(runData) {
+  if(!currentUser) {
+    console.log("APEX: Not signed in — run not saved");
+    return;
+  }
+
+  var result = await supa.from("runs").insert({
+    user_id: currentUser.id,
+    trail: runData.trail || "Southern Cross",
+    date: new Date().toISOString(),
+    duration_secs: runData.duration || 0,
+    apex_score: runData.apexScore || 0,
+    brake_zones: runData.brakeZones || 0,
+    commit_zones: runData.commitZones || 0,
+    top_speed: runData.topSpeed || 0,
+    conditions: runData.conditions || "dry",
+    notes: runData.notes || ""
+  });
+
+  if(result.error) {
+    console.warn("APEX: Failed to save run:", result.error.message);
+  } else {
+    console.log("APEX: Run saved to Supabase");
+  }
+}
+
+// ── Upload GPX to Supabase Storage ──
+async function uploadGPXToSupabase(file) {
+  if(!currentUser) {
+    console.log("APEX: Not signed in — GPX not uploaded");
+    return null;
+  }
+
+  var path = currentUser.id + "/" + Date.now() + "_" + file.name;
+  var result = await supa.storage.from("gpx-uploads").upload(path, file);
+
+  if(result.error) {
+    console.warn("APEX: GPX upload failed:", result.error.message);
+    return null;
+  }
+
+  console.log("APEX: GPX uploaded to Supabase:", path);
+  return path;
+}
+
+// ── Load rider's runs from Supabase ──
+async function loadRunsFromSupabase() {
+  if(!currentUser) return [];
+
+  var result = await supa.from("runs")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .order("date", { ascending: false })
+    .limit(20);
+
+  if(result.error) {
+    console.warn("APEX: Failed to load runs:", result.error.message);
+    return [];
+  }
+
+  return result.data;
+}
+
 // ── Service Worker ──
 if("serviceWorker" in navigator){
   var swCode="self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return new Response('Offline',{status:503})}))})";
@@ -2245,4 +2432,4 @@ document.addEventListener("click", function() {
 }, {once: true});
 </script>
 </body>
-</html> 
+</html>
