@@ -124,8 +124,9 @@
     .apex-badge.active{border-color:var(--green);color:var(--green);}
 
     /* Slider */
-    #rider-level{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer;}
-    #rider-level::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--text);border:2px solid var(--bg);box-shadow:0 0 0 2px var(--text);cursor:pointer;}
+    #rider-level{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer;touch-action:none;}
+    #rider-level::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--text);border:2px solid var(--bg);box-shadow:0 0 0 2px var(--text);cursor:pointer;touch-action:none;}
+    #rider-level{touch-action:none;}
 
     /* Search */
     .search-wrap{position:relative;margin-bottom:10px;}
@@ -405,7 +406,7 @@
         <video id="vzb-video" style="display:none;width:100%;background:#000;max-height:220px" playsinline></video>
         <input id="vzb-input" type="file" accept="video/*" style="display:none" onchange="vzb_load(this)">
         <div id="vzb-controls" style="display:none;padding:12px 14px;border-top:1px solid var(--border)">
-          <div class="vzb-timeline" id="vzb-timeline" onclick="vzb_seek(event)">
+          <div class="vzb-timeline" id="vzb-timeline" onclick="vzb_seek(event)" ontouchstart="vzb_seek(event)" ontouchmove="vzb_seek(event)">
             <div id="vzb-progress" style="position:absolute;top:0;left:0;height:100%;background:rgba(240,240,240,.08);width:0;pointer-events:none"></div>
             <div id="vzb-markers" style="position:absolute;inset:0;pointer-events:none"></div>
             <div id="vzb-playhead" style="position:absolute;top:0;left:0;width:2px;height:100%;background:var(--text);pointer-events:none"></div>
@@ -450,7 +451,7 @@
           <div class="label" style="margin-bottom:0">Rider Level</div>
           <div id="level-label" style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--green)">INTERMEDIATE</div>
         </div>
-        <input type="range" id="rider-level" min="1" max="5" value="3" step="1" oninput="updateLevel(this.value)">
+        <input type="range" id="rider-level" min="1" max="5" value="3" step="1" oninput="updateLevel(this.value)" ontouchstart="updateLevel(this.value)" ontouchmove="updateLevel(this.value)">
         <div style="display:flex;justify-content:space-between;margin-top:8px">
           <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Novice</span>
           <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Pro</span>
