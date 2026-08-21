@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!-- 
+  IMPORTANT: For Supabase auth to work, use the GitHub Pages URL only:
+  emanateindustries-dot.github.io/mn8-sight-public-
+  
+  To fix Edge/other browser login, add these URLs to Supabase allowed redirects:
+  Supabase Dashboard > Authentication > URL Configuration > Redirect URLs
+  Add: https://emanateindustries-dot.github.io/mn8-sight-public-
+-->
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -17,7 +26,7 @@
       --text:#F0F0F0;--muted:#555555;--muted2:#888888;--white:#FFFFFF;
       --red:#FF3B2F;--amber:#FFAA00;--green:#1DDB7A;--blue:#4A9FFF;
     }
-    html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Montserrat',-apple-system,sans-serif;max-width:430px;margin:0 auto;}
+    html{height:100%;height:-webkit-fill-available;}body{height:100%;height:-webkit-fill-available;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Montserrat',-apple-system,sans-serif;max-width:430px;margin:0 auto;display:flex;flex-direction:column;}
 
     /* ── Loading ── */
     #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:500;}
@@ -56,7 +65,7 @@
     .tos-chk-lbl{font-size:12px;color:var(--muted2);line-height:1.5;}
 
     /* ── App shell ── */
-    #app{display:none;height:100%;flex-direction:column;}
+    #app{display:none;height:100vh;height:-webkit-fill-available;flex-direction:column;overflow:hidden;}
 
     /* Header */
     .header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
@@ -71,7 +80,7 @@
     .trail-name{font-size:13px;font-weight:700;letter-spacing:1px;color:var(--text);}
 
     /* Content */
-    .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 90px;}
+    .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 90px;min-height:0;}
 
     /* Nav */
     .nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr 1fr;height:60px;z-index:50;}
@@ -772,7 +781,7 @@ function onSignedIn() {
   var btn=document.getElementById('user-btn');
   if(btn&&currentUser) btn.textContent=currentUser.email.split('@')[0].toUpperCase().slice(0,6);
   hide('loading'); hide('signin'); hide('signup'); hide('tos');
-  show('app');
+  var appEl=document.getElementById('app');if(appEl){appEl.style.display='flex';}
 }
 
 function showUserMenu() {
