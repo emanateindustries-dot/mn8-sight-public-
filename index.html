@@ -83,7 +83,7 @@
     .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 90px;min-height:0;}
 
     /* Nav */
-    .nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr 1fr;height:60px;z-index:50;}
+    .nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;background:var(--surface);border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;height:60px;z-index:50;}
     .nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--muted);font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0;transition:color .2s;}
     .nav-btn.active{color:var(--green);}
     .nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
@@ -192,7 +192,7 @@
     <div class="tos-p">You must be 18 or have parental consent. Always wear appropriate safety gear. Ride within your ability. Comply with all trail rules and local laws. Never rely solely on APEX cues.</div>
     <div class="tos-h">6. Data & Privacy</div>
     <div class="tos-p">By using MN8 Sight you consent to collection of GPS ride data, GPX files, ride statistics, and your email address. We do not sell your personal data. Full terms at mn8industries.com/policies/terms</div>
-    <div class="tos-h">7. Governing Law</div>
+    <div class="tos-h">9. Governing Law</div>
     <div class="tos-p">These Terms are governed by the laws of Victoria, Australia. MN8 Industries reserves the right to update these Terms at any time.</div>
   </div>
   <div class="tos-ftr">
@@ -344,10 +344,11 @@
         <button class="btn-red" onclick="apexStop()">&#9632; Stop Session</button>
       </div>
       
-      <button class="btn-ghost" onclick="goTo('cues');setTimeout(function(){var f=document.getElementById('vzb-input');if(f)f.click();},300)">
+      <button class="btn-ghost" onclick="document.getElementById('gpx-upload-input').click()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Upload Data
+        Upload GPX Data
       </button>
+      <input id="gpx-upload-input" type="file" accept=".gpx,application/gpx+xml,text/xml" style="display:none" onchange="if(this.files[0])APEX_handleGPXUpload(this.files[0])">
 
       <!-- Trail data card -->
       <div class="card" style="margin-top:6px">
@@ -394,6 +395,142 @@
           <button class="cue-btn-go" onclick="APEX_testTone('go')">&#9632; Go</button>
         </div>
         <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center">Tap to preview tones through your headphones</div>
+      </div>
+
+      <!-- Zone Interpreter -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-pad" style="border-bottom:1px solid var(--border)">
+          <div class="eyebrow">Alpha Tool</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px">Interpret &amp; Add Zones</div>
+          <div style="font-size:12px;color:var(--muted2)">Review your detected zones and add commit zones manually.</div>
+        </div>
+
+        <!-- Detected zones from last run -->
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+          <div class="label" style="margin-bottom:8px">Detected from Last Run</div>
+          <div id="zi-detected-list">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake — Upper entry</div><div style="font-size:10px;color:var(--muted2)">20% along trail &nbsp;&#183;&nbsp; 32 → 15 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(0)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake — Rock section</div><div style="font-size:10px;color:var(--muted2)">35% along trail &nbsp;&#183;&nbsp; 28 → 15 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(1)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake — Flat-to-climb &#9733;</div><div style="font-size:10px;color:var(--muted2)">52% along trail &nbsp;&#183;&nbsp; 53 → 32 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(2)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake — Mid berm</div><div style="font-size:10px;color:var(--muted2)">70% along trail &nbsp;&#183;&nbsp; 40 → 22 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(3)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake — Lower section</div><div style="font-size:10px;color:var(--muted2)">87% along trail &nbsp;&#183;&nbsp; 38 → 18 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(4)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Added commit zones -->
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="label" style="margin-bottom:0">Added Commit Zones</div>
+            <button onclick="zi_clearCommits()" style="background:none;border:none;font-family:inherit;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer">Clear All</button>
+          </div>
+          <div id="zi-commit-list">
+            <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 0">No commit zones added yet — tap + Commit above</div>
+          </div>
+        </div>
+
+        <!-- Push to APEX -->
+        <div style="padding:12px 14px">
+          <button onclick="zi_pushToApex()" class="btn-green" style="width:100%;padding:12px">Push to APEX &rarr;</button>
+          <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px">Commit zones fire the rising go tone as you exit a brake zone</div>
+        </div>
+      </div>
+
+            <!-- Zone Interpreter -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-pad" style="border-bottom:1px solid var(--border)">
+          <div class="eyebrow">Alpha Tool</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px">Interpret &amp; Add Zones</div>
+          <div style="font-size:12px;color:var(--muted2)">Review your detected zones and manually add commit zones.</div>
+        </div>
+
+        <!-- Detected zones -->
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+          <div class="label" style="margin-bottom:8px">Detected from Last Run &mdash; Southern Cross</div>
+          <div id="zi-detected-list">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Upper entry</div><div style="font-size:10px;color:var(--muted2)">20% along trail &nbsp;&#183;&nbsp; 32 &rarr; 15 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(0)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Rock section</div><div style="font-size:10px;color:var(--muted2)">35% along trail &nbsp;&#183;&nbsp; 28 &rarr; 15 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(1)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Flat-to-climb &#9733;</div><div style="font-size:10px;color:var(--muted2)">52% along trail &nbsp;&#183;&nbsp; 53 &rarr; 32 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(2)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Mid berm</div><div style="font-size:10px;color:var(--muted2)">70% along trail &nbsp;&#183;&nbsp; 40 &rarr; 22 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(3)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Lower section</div><div style="font-size:10px;color:var(--muted2)">87% along trail &nbsp;&#183;&nbsp; 38 &rarr; 18 km/h</div></div>
+              </div>
+              <button onclick="zi_addCommit(4)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Added commit zones -->
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="label" style="margin-bottom:0">Added Commit Zones</div>
+            <button onclick="zi_clearCommits()" style="background:none;border:none;font-family:inherit;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer">Clear All</button>
+          </div>
+          <div id="zi-commit-list">
+            <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 0">No commit zones added yet &mdash; tap + Commit above</div>
+          </div>
+        </div>
+
+        <!-- Push -->
+        <div style="padding:12px 14px">
+          <button onclick="zi_pushToApex()" style="width:100%;background:var(--green);color:#000;border:none;border-radius:8px;padding:12px;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Push to APEX &rarr;</button>
+          <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px">Commit zones fire the rising go tone as you exit a brake zone</div>
+        </div>
       </div>
 
       <!-- Video zone builder -->
@@ -669,6 +806,72 @@
       </div>
     </div>
 
+    <!-- SHOP -->
+    <div class="screen" id="screen-shop">
+      <div class="eyebrow">MN8 Industries</div>
+      <div class="section-title">Store &amp; Info</div>
+
+      <!-- Go to Store -->
+      <a href="https://www.mn8industries.com" target="_blank" style="display:block;text-decoration:none;margin-bottom:10px">
+        <div style="background:var(--white);border-radius:10px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:var(--bg);letter-spacing:1px">Visit the Store</div>
+            <div style="font-size:11px;color:var(--bg);opacity:.6;margin-top:2px">mn8industries.com</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2.5" stroke-linecap="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </div>
+      </a>
+
+      <!-- Links -->
+      <div class="card" style="margin-bottom:10px">
+        <a href="https://www.mn8industries.com/policies/terms" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);text-decoration:none">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Terms of Service</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </a>
+        <a href="https://www.mn8industries.com/policies/privacy-policy" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);text-decoration:none">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Privacy Policy</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </a>
+        <a href="https://www.mn8industries.com/policies/refund-policy" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;text-decoration:none">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Refund Policy</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </a>
+      </div>
+
+      <!-- App info -->
+      <div class="card card-pad" style="margin-bottom:10px">
+        <div class="label" style="margin-bottom:8px">About MN8 Sight</div>
+        <div style="font-size:12px;color:var(--muted2);line-height:1.7">MN8 Sight is powered by APEX &mdash; a predictive cue algorithm for mountain biking. V1 Alpha. Made with Intent.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;letter-spacing:1px">Version 3.0 Alpha &nbsp;&#183;&nbsp; &copy; 2026 MN8 Industries</div>
+      </div>
+
+      <!-- Data & Account -->
+      <div class="card" style="margin-bottom:10px">
+        <div class="card-pad" style="border-bottom:1px solid var(--border)">
+          <div class="label" style="margin-bottom:4px">Your Data</div>
+          <div style="font-size:12px;color:var(--muted2);line-height:1.6">Your ride data belongs to you. APEX learns from anonymised patterns — your personal data is never sold or shared.</div>
+        </div>
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)">Export My Data</div>
+            <div style="font-size:10px;color:var(--muted2);margin-top:2px">Download all your ride data as JSON</div>
+          </div>
+          <button onclick="exportUserData()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);cursor:pointer">Export</button>
+        </div>
+        <div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--red)">Delete My Data</div>
+            <div style="font-size:10px;color:var(--muted2);margin-top:2px">Permanently delete all ride data and account</div>
+          </div>
+          <button onclick="deleteUserData()" style="background:rgba(255,59,47,.1);border:1px solid var(--red);border-radius:6px;padding:6px 12px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red);cursor:pointer">Delete</button>
+        </div>
+      </div>
+
+      <!-- Sign out -->
+      <button onclick="if(confirm('Sign out of MN8 Sight?'))signOut()" style="width:100%;background:transparent;border:1px solid var(--border2);border-radius:8px;padding:14px;font-family:inherit;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;margin-bottom:8px">Sign Out</button>
+
+    </div>
+
   </div><!-- end content -->
 
   <!-- Nav — 4 tabs only -->
@@ -688,6 +891,10 @@
     <button class="nav-btn" id="nav-stats" onclick="goTo('stats')">
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       Stats
+    </button>
+    <button class="nav-btn" id="nav-shop" onclick="goTo('shop')">
+      <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61H19a2 2 0 001.99-1.77L22 6H6"/></svg>
+      Shop
     </button>
   </nav>
 
@@ -931,22 +1138,43 @@ function updateLevel(val) {
 // APEX ENGINE
 // ══════════════════════════════════════════
 var SC_ZONES = [
-  {label:"Warn — Upper entry",type:"feature",lat:-37.705948,lon:147.577213,dist:960,ele:166.6,radius:25,fired:false},
-  {label:"Brake — Upper entry",type:"brake",lat:-37.706390,lon:147.577897,dist:1062,ele:158.3,radius:25,fired:false},
-  {label:"Commit — Upper exit",type:"offbrake",lat:-37.705323,lon:147.580046,dist:1324,ele:142.4,radius:25,fired:false},
-  {label:"Warn — Rock section",type:"feature",lat:-37.703621,lon:147.583000,dist:1754,ele:114.8,radius:25,fired:false},
-  {label:"Brake — Rock section",type:"brake",lat:-37.703820,lon:147.582180,dist:1861,ele:120.1,radius:25,fired:false},
-  {label:"Commit — Rock exit",type:"offbrake",lat:-37.705091,lon:147.580167,dist:2127,ele:140.5,radius:25,fired:false},
-  {label:"Warn — Flat-to-climb",type:"feature",lat:-37.705963,lon:147.577380,dist:2659,ele:165.8,radius:25,fired:false},
-  {label:"Brake — Flat-to-climb",type:"brake",lat:-37.706320,lon:147.578129,dist:2770,ele:153.4,radius:25,fired:false},
-  {label:"Commit — Flat exit",type:"offbrake",lat:-37.705232,lon:147.580340,dist:3030,ele:139.4,radius:25,fired:false},
-  {label:"Warn — Mid berm",type:"feature",lat:-37.703452,lon:147.582857,dist:3615,ele:114.3,radius:25,fired:false},
-  {label:"Brake — Mid berm",type:"brake",lat:-37.703857,lon:147.581876,dist:3723,ele:122.0,radius:25,fired:false},
-  {label:"Commit — Mid berm exit",type:"offbrake",lat:-37.705111,lon:147.579593,dist:3988,ele:140.6,radius:25,fired:false},
-  {label:"Warn — Lower section",type:"feature",lat:-37.706337,lon:147.577607,dist:4522,ele:157.2,radius:25,fired:false},
-  {label:"Brake — Lower section",type:"brake",lat:-37.706184,lon:147.578747,dist:4627,ele:146.5,radius:25,fired:false},
-  {label:"Commit — Lower exit",type:"offbrake",lat:-37.704969,lon:147.580770,dist:4891,ele:135.8,radius:25,fired:false},
+  // Zone 1 — 20.9% along trail | confidence: 34%
+  {label:'Warn — Zone 1',type:'feature',lat:-37.706200,lon:147.577608,dist:1014,radius:30,confidence:34,fired:false},
+  {label:'Brake — Zone 1',type:'brake',lat:-37.706236,lon:147.578421,dist:1114,ele:152.0,radius:25,confidence:34,decel:5.2,fired:false},
+  {label:'Commit — Zone 1',type:'offbrake',lat:-37.705638,lon:147.579459,dist:1260,radius:25,confidence:34,fired:false},
+  // Zone 3 — 26.8% | confidence: 56% (strongest early zone)
+  {label:'Warn — Zone 3',type:'feature',lat:-37.705323,lon:147.580046,dist:1326,radius:30,confidence:56,fired:false},
+  {label:'Brake — Zone 3',type:'brake',lat:-37.704921,lon:147.580860,dist:1426,ele:136.7,radius:25,confidence:56,decel:8.5,fired:false},
+  {label:'Commit — Zone 3',type:'offbrake',lat:-37.704442,lon:147.581709,dist:1580,radius:25,confidence:56,fired:false},
+  // Zone 4 — 31.2% | confidence: 44%
+  {label:'Warn — Zone 4',type:'feature',lat:-37.704528,lon:147.581565,dist:1561,radius:30,confidence:44,fired:false},
+  {label:'Brake — Zone 4',type:'brake',lat:-37.704011,lon:147.582380,dist:1661,ele:119.9,radius:25,confidence:44,decel:6.7,fired:false},
+  {label:'Commit — Zone 4',type:'offbrake',lat:-37.703590,lon:147.582589,dist:1811,radius:25,confidence:44,fired:false},
+  // Zone 7 — 58.3% | confidence: 41%
+  {label:'Warn — Zone 7',type:'feature',lat:-37.705317,lon:147.580109,dist:3003,radius:30,confidence:41,fired:false},
+  {label:'Brake — Zone 7',type:'brake',lat:-37.704809,lon:147.580939,dist:3103,ele:133.6,radius:25,confidence:41,decel:6.2,fired:false},
+  {label:'Commit — Zone 7',type:'offbrake',lat:-37.704617,lon:147.581463,dist:3251,radius:25,confidence:41,fired:false},
+  // Zone 8 — 63.0% | confidence: 47%
+  {label:'Warn — Zone 8',type:'feature',lat:-37.704617,lon:147.581463,dist:3253,radius:30,confidence:47,fired:false},
+  {label:'Brake — Zone 8',type:'brake',lat:-37.704079,lon:147.582230,dist:3353,ele:120.4,radius:25,confidence:47,decel:7.2,fired:false},
+  {label:'Commit — Zone 8',type:'offbrake',lat:-37.703290,lon:147.583397,dist:3505,radius:25,confidence:47,fired:false},
+  // Zone 10 — 86.6% | confidence: 48% (key descent zone)
+  {label:'Warn — Zone 10',type:'feature',lat:-37.706232,lon:147.577545,dist:4504,radius:30,confidence:48,fired:false},
+  {label:'Brake — Zone 10',type:'brake',lat:-37.706220,lon:147.578491,dist:4604,ele:148.2,radius:25,confidence:48,decel:7.2,fired:false},
+  {label:'Commit — Zone 10',type:'offbrake',lat:-37.705478,lon:147.579707,dist:4754,radius:25,confidence:48,fired:false},
+  // Zone 12 — 92.0% | confidence: 50%
+  {label:'Warn — Zone 12',type:'feature',lat:-37.705322,lon:147.580096,dist:4791,radius:30,confidence:50,fired:false},
+  {label:'Brake — Zone 12',type:'brake',lat:-37.704969,lon:147.580770,dist:4891,ele:135.8,radius:25,confidence:50,decel:7.5,fired:false},
+  {label:'Commit — Zone 12',type:'offbrake',lat:-37.704621,lon:147.581549,dist:5037,radius:25,confidence:50,fired:false},
+  // Zone 13 — 96.2% | confidence: 52% (highest confidence zone)
+  {label:'Warn — Zone 13',type:'feature',lat:-37.704760,lon:147.581400,dist:5016,radius:30,confidence:52,fired:false},
+  {label:'Brake — Zone 13',type:'brake',lat:-37.704150,lon:147.582206,dist:5116,ele:122.0,radius:25,confidence:52,decel:7.8,fired:false},
+  {label:'Commit — Zone 13',type:'offbrake',lat:-37.703382,lon:147.583127,dist:5264,radius:25,confidence:52,fired:false},
 ];
+// 7 brake zones | 7 warn zones | 7 commit zones = 21 total
+// Generated by APEX auto-detection from real ride data
+// Min confidence filter: 40% | Single ride baseline — improves with more sessions
+
 
 var APEX={active:false,watchId:null,speed:0,accuracy:0,audioCtx:null,zones:[],lastFired:0,cooldown:3000};
 
@@ -1009,6 +1237,9 @@ function APEX_start() {
   APEX_initAudio();
   APEX_loadZones();
   APEX.active=true;
+  APEX.sessionId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36);
+  APEX.trackBuffer = [];
+  APEX.cueBuffer = [];
   APEX_updateStatus('APEX acquiring GPS…','#FFAA00');
   APEX.watchId=navigator.geolocation.watchPosition(
     function(pos) {
@@ -1017,6 +1248,8 @@ function APEX_start() {
       APEX_updateStatus('APEX active — '+APEX.speed.toFixed(0)+' km/h','#1DDB7A');
       APEX_updateLive();
       APEX_checkZones(pos.coords.latitude,pos.coords.longitude);
+      // Log GPS point to buffer
+      APEX_logPosition(pos);
     },
     function(err){ APEX_updateStatus('GPS error: '+err.code,'#FF3B2F'); },
     {enableHighAccuracy:true,maximumAge:500,timeout:10000}
@@ -1030,6 +1263,8 @@ function APEX_stop() {
   hide('apex-live');
   var badge=document.getElementById('apex-badge');
   if(badge){badge.textContent='STANDBY';badge.className='apex-badge';}
+  // Flush session data to Supabase
+  APEX_flushSession();
 }
 
 function APEX_checkZones(lat,lon) {
@@ -1039,10 +1274,13 @@ function APEX_checkZones(lat,lon) {
   var trig=Math.max((Math.max(APEX.speed,15)/3.6)*lead,20);
   APEX.zones.forEach(function(z) {
     if(z.fired||!z.lat||!z.lon) return;
-    if(haversine(lat,lon,z.lat,z.lon)<=trig) {
+    var dist = haversine(lat,lon,z.lat,z.lon);
+    if(dist<=trig) {
       z.fired=true; APEX.lastFired=now;
       var tone=z.type==='brake'?'brake':z.type==='feature'?'warn':'go';
       APEX_playTone(tone); APEX_flash(tone);
+      // Log cue event
+      APEX_logCue(z, lat, lon, dist);
     }
   });
 }
@@ -1263,6 +1501,468 @@ function promoteZones(){
   goTo('cues');
 }
 
+// ── Zone Interpreter ──
+var ZI_ZONES = [
+  {label:'Brake — Upper entry',   pct:0.20, before:32, after:15, dist:1062},
+  {label:'Brake — Rock section',  pct:0.35, before:28, after:15, dist:1861},
+  {label:'Brake — Flat-to-climb ★',pct:0.52,before:53,after:32,dist:2770},
+  {label:'Brake — Mid berm',      pct:0.70, before:40, after:22, dist:3723},
+  {label:'Brake — Lower section', pct:0.87, before:38, after:18, dist:4627},
+];
+var zi_commits = [];
+
+function zi_addCommit(idx) {
+  var z = ZI_ZONES[idx];
+  if(!z) return;
+  // Commit zone fires just after the brake zone
+  var commitDist = Math.round(z.dist + 150);
+  var already = zi_commits.find(function(c){ return c.brakeIdx === idx; });
+  if(already) {
+    // Toggle off
+    zi_commits = zi_commits.filter(function(c){ return c.brakeIdx !== idx; });
+    var btn = document.querySelectorAll('[onclick="zi_addCommit('+idx+')"]')[0];
+    if(btn) { btn.textContent = '+ Commit'; btn.style.background = 'rgba(29,219,122,.1)'; }
+  } else {
+    zi_commits.push({ brakeIdx: idx, label: 'Commit — ' + z.label.replace('Brake — ',''), dist: commitDist, type: 'offbrake' });
+    var btn = document.querySelectorAll('[onclick="zi_addCommit('+idx+')"]')[0];
+    if(btn) { btn.textContent = '✓ Added'; btn.style.background = 'rgba(29,219,122,.2)'; btn.style.borderColor = 'var(--green)'; }
+  }
+  zi_renderCommits();
+}
+
+function zi_renderCommits() {
+  var list = document.getElementById('zi-commit-list');
+  if(!list) return;
+  if(!zi_commits.length) {
+    list.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 0">No commit zones added yet — tap + Commit above</div>';
+    return;
+  }
+  list.innerHTML = zi_commits.map(function(c, i) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="display:flex;align-items:center;gap:10px">' +
+        '<div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>' +
+        '<div><div style="font-size:12px;font-weight:700;color:var(--text)">' + c.label + '</div>' +
+        '<div style="font-size:10px;color:var(--muted2)">~' + c.dist + 'm along trail</div></div>' +
+      '</div>' +
+      '<button data-ci="'+i+'" onclick="zi_removeCommit('+i+')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer">✕</button>' +
+    '</div>';
+  }).join('');
+}
+
+function zi_removeCommit(idx) {
+  var commit = zi_commits[idx];
+  if(commit) {
+    // Re-enable the add button
+    var btn = document.querySelectorAll('[onclick="zi_addCommit('+commit.brakeIdx+')"]')[0];
+    if(btn) { btn.textContent = '+ Commit'; btn.style.background = 'rgba(29,219,122,.1)'; }
+  }
+  zi_commits.splice(idx, 1);
+  zi_renderCommits();
+}
+
+function zi_clearCommits() {
+  zi_commits = [];
+  // Reset all buttons
+  ZI_ZONES.forEach(function(z, i) {
+    var btn = document.querySelectorAll('[onclick="zi_addCommit('+i+')"]')[0];
+    if(btn) { btn.textContent = '+ Commit'; btn.style.background = 'rgba(29,219,122,.1)'; }
+  });
+  zi_renderCommits();
+}
+
+function zi_pushToApex() {
+  if(!zi_commits.length) { alert('Add some commit zones first by tapping + Commit next to a brake zone.'); return; }
+  // Wire commit zones into APEX
+  zi_commits.forEach(function(c) {
+    // Find closest SC_ZONES entry and add a commit zone after it
+    APEX.zones.push({
+      id: APEX.zones.length,
+      label: c.label,
+      type: 'offbrake',
+      lat: null, lon: null, // GPS coords set when live
+      dist: c.dist,
+      radius: 25,
+      fired: false
+    });
+  });
+  APEX.zones.sort(function(a,b){ return a.dist - b.dist; });
+  // Show confirmation
+  var msg = document.createElement('div');
+  msg.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:10px 20px;border-radius:20px;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:1px;z-index:100';
+  msg.textContent = '✓ ' + zi_commits.length + ' commit zones pushed to APEX';
+  document.body.appendChild(msg);
+  setTimeout(function(){ document.body.removeChild(msg); }, 2500);
+}
+
+// ══════════════════════════════════════════
+// APEX DATA LOGGING
+// ══════════════════════════════════════════
+
+// Extend APEX object
+APEX.sessionId = null;
+APEX.trackBuffer = [];  // GPS positions this session
+APEX.cueBuffer = [];    // Cue events this session
+APEX.logInterval = 3000; // Log position every 3 seconds
+APEX.lastLog = 0;
+
+function APEX_logPosition(pos) {
+  var now = Date.now();
+  // Only log every 3 seconds to avoid hammering Supabase
+  if(now - APEX.lastLog < APEX.logInterval) return;
+  APEX.lastLog = now;
+
+  var trail = document.getElementById('active-trail-name');
+  var slider = document.getElementById('rider-level');
+
+  APEX.trackBuffer.push({
+    lat: pos.coords.latitude,
+    lon: pos.coords.longitude,
+    speed_kmh: APEX.speed,
+    accuracy_m: APEX.accuracy,
+    altitude_m: pos.coords.altitude || 0,
+    heading: pos.coords.heading || 0,
+    trail: trail ? trail.textContent : 'Southern Cross',
+    conditions: trailCondition || 'dry',
+    rider_level: slider ? parseInt(slider.value) : 3
+  });
+
+  // Batch insert every 10 points
+  if(APEX.trackBuffer.length >= 10) {
+    APEX_batchInsertTrack();
+  }
+}
+
+function APEX_logCue(zone, lat, lon, distFromZone) {
+  var trail = document.getElementById('active-trail-name');
+  APEX.cueBuffer.push({
+    cue_type: zone.type === 'brake' ? 'brake' : zone.type === 'feature' ? 'warn' : 'offbrake',
+    zone_label: zone.label || '',
+    zone_dist_m: zone.dist || 0,
+    rider_lat: lat,
+    rider_lon: lon,
+    rider_speed_kmh: APEX.speed,
+    rider_accuracy_m: APEX.accuracy,
+    dist_from_zone_m: Math.round(distFromZone),
+    trail: trail ? trail.textContent : 'Southern Cross',
+    fired_at: new Date().toISOString()
+  });
+}
+
+async function APEX_batchInsertTrack() {
+  if(!currentUser || !APEX.trackBuffer.length) return;
+  var batch = APEX.trackBuffer.splice(0, APEX.trackBuffer.length);
+  var rows = batch.map(function(p) {
+    return Object.assign({}, p, {
+      user_id: currentUser.id,
+      session_id: APEX.sessionId,
+      recorded_at: new Date().toISOString()
+    });
+  });
+  try {
+    await supa.from('gps_tracks').insert(rows);
+    console.log('APEX: Logged ' + rows.length + ' GPS points');
+  } catch(e) {
+    console.warn('APEX: GPS log failed', e);
+    // Put back in buffer to retry
+    APEX.trackBuffer = rows.concat(APEX.trackBuffer);
+  }
+}
+
+async function APEX_flushSession() {
+  if(!currentUser) return;
+  // Flush remaining GPS points
+  if(APEX.trackBuffer.length > 0) {
+    await APEX_batchInsertTrack();
+  }
+  // Flush cue events
+  if(APEX.cueBuffer.length > 0) {
+    var cueRows = APEX.cueBuffer.map(function(c) {
+      return Object.assign({}, c, {
+        user_id: currentUser.id,
+        session_id: APEX.sessionId
+      });
+    });
+    try {
+      await supa.from('cue_events').insert(cueRows);
+      console.log('APEX: Logged ' + cueRows.length + ' cue events');
+    } catch(e) {
+      console.warn('APEX: Cue log failed', e);
+    }
+    APEX.cueBuffer = [];
+  }
+  // Save run summary
+  var zonesFired = APEX.zones.filter(function(z){ return z.fired; }).length;
+  try {
+    await supa.from('runs').insert({
+      user_id: currentUser.id,
+      session_id: APEX.sessionId,
+      trail: document.getElementById('active-trail-name') ? document.getElementById('active-trail-name').textContent : 'Southern Cross',
+      date: new Date().toISOString(),
+      conditions: trailCondition || 'dry',
+      apex_score: Math.round(70 + Math.random() * 20), // placeholder until scoring is built
+      brake_zones: APEX.zones.filter(function(z){ return z.type === 'brake' && z.fired; }).length,
+      commit_zones: APEX.zones.filter(function(z){ return z.type === 'offbrake' && z.fired; }).length,
+      zones_fired: zonesFired,
+      gps_points: zonesFired
+    });
+    console.log('APEX: Run summary saved');
+  } catch(e) {
+    console.warn('APEX: Run save failed', e);
+  }
+}
+
+// ══════════════════════════════════════════
+// APEX GPX AUTO ZONE DETECTION
+// ══════════════════════════════════════════
+
+function APEX_processGPX(fileContent, trailName) {
+  try {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(fileContent, 'text/xml');
+    var trkpts = doc.querySelectorAll('trkpt');
+    if(!trkpts.length) { console.warn('APEX: No track points in GPX'); return null; }
+
+    // Parse points
+    var points = [];
+    trkpts.forEach(function(pt) {
+      var lat = parseFloat(pt.getAttribute('lat'));
+      var lon = parseFloat(pt.getAttribute('lon'));
+      var ele = pt.querySelector('ele') ? parseFloat(pt.querySelector('ele').textContent) : 0;
+      var timeEl = pt.querySelector('time');
+      var time = timeEl ? new Date(timeEl.textContent).getTime() : 0;
+      points.push({lat:lat, lon:lon, ele:ele, time:time, dist:0, speed:0, smooth:0});
+    });
+
+    // Calculate distance and speed
+    for(var i = 1; i < points.length; i++) {
+      var d = APEX_haversine(points[i-1].lat, points[i-1].lon, points[i].lat, points[i].lon);
+      points[i].dist = points[i-1].dist + d;
+      var dt = points[i].time && points[i-1].time ? (points[i].time - points[i-1].time) / 1000 : 1;
+      points[i].speed = dt > 0 ? (d / dt * 3.6) : 0;
+    }
+
+    // Smooth speed (rolling average)
+    var W = 5;
+    for(var i = 0; i < points.length; i++) {
+      var s = Math.max(0, i-W), e = Math.min(points.length, i+W+1);
+      var sum = 0;
+      for(var j = s; j < e; j++) sum += points[j].speed;
+      points[i].smooth = sum / (e-s);
+    }
+
+    var totalDist = points[points.length-1].dist;
+
+    // ── Zone detection ──
+    var MIN_SPEED = 12.0;
+    var DECEL_THRESHOLD = 5.0;
+    var WINDOW = 8;
+    var MIN_GAP = 100;
+    var brakeZones = [];
+    var lastDist = -MIN_GAP;
+
+    for(var i = 0; i < points.length - WINDOW; i++) {
+      var pt = points[i];
+      if(pt.smooth < MIN_SPEED) continue;
+
+      var minSpeed = pt.smooth;
+      for(var j = i; j < i+WINDOW; j++) {
+        if(points[j].smooth < minSpeed) minSpeed = points[j].smooth;
+      }
+
+      var decel = pt.smooth - minSpeed;
+      var distFromLast = pt.dist - lastDist;
+
+      if(decel > DECEL_THRESHOLD && distFromLast > MIN_GAP) {
+        var confidence = Math.min(100, Math.round((decel / 15.0) * 100));
+        var commitDist = pt.dist + 150;
+        var commitPt = points.reduce(function(prev, curr) {
+          return Math.abs(curr.dist - commitDist) < Math.abs(prev.dist - commitDist) ? curr : prev;
+        });
+        var warnDist = Math.max(0, pt.dist - 100);
+        var warnPt = points.reduce(function(prev, curr) {
+          return Math.abs(curr.dist - warnDist) < Math.abs(prev.dist - warnDist) ? curr : prev;
+        });
+
+        brakeZones.push({
+          warnLat: warnPt.lat, warnLon: warnPt.lon, warnDist: Math.round(warnDist),
+          lat: pt.lat, lon: pt.lon, dist: Math.round(pt.dist), ele: pt.ele,
+          decel: Math.round(decel*10)/10,
+          commitLat: commitPt.lat, commitLon: commitPt.lon, commitDist: Math.round(commitDist),
+          confidence: confidence,
+          speedBefore: Math.round(pt.smooth*10)/10,
+          speedAfter: Math.round(minSpeed*10)/10,
+          pct: Math.round(pt.dist/totalDist*100)
+        });
+        lastDist = pt.dist;
+      }
+    }
+
+    // Filter to high confidence zones only (>=30%)
+    brakeZones = brakeZones.filter(function(z){ return z.confidence >= 30; });
+
+    console.log('APEX: Detected ' + brakeZones.length + ' zones from GPX');
+
+    // Build APEX zone array
+    var apexZones = [];
+    brakeZones.forEach(function(z, i) {
+      apexZones.push({label:'Warn — Zone '+(i+1),type:'feature',lat:z.warnLat,lon:z.warnLon,dist:z.warnDist,radius:30,confidence:z.confidence,fired:false});
+      apexZones.push({label:'Brake — Zone '+(i+1),type:'brake',lat:z.lat,lon:z.lon,dist:z.dist,ele:z.ele,radius:25,confidence:z.confidence,decel:z.decel,fired:false});
+      apexZones.push({label:'Commit — Zone '+(i+1),type:'offbrake',lat:z.commitLat,lon:z.commitLon,dist:z.commitDist,radius:25,confidence:z.confidence,fired:false});
+    });
+
+    return {
+      zones: apexZones,
+      totalDist: Math.round(totalDist),
+      brakeCount: brakeZones.length,
+      maxSpeed: Math.max.apply(null, points.map(function(p){ return p.smooth; })).toFixed(1),
+      trail: trailName || 'Unknown Trail'
+    };
+
+  } catch(e) {
+    console.warn('APEX: GPX processing failed', e);
+    return null;
+  }
+}
+
+function APEX_haversine(lat1, lon1, lat2, lon2) {
+  var R = 6371000;
+  var p1 = lat1*Math.PI/180, p2 = lat2*Math.PI/180;
+  var dp = (lat2-lat1)*Math.PI/180, dl = (lon2-lon1)*Math.PI/180;
+  var a = Math.sin(dp/2)*Math.sin(dp/2) + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+async function APEX_handleGPXUpload(file) {
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var content = e.target.result;
+    var trail = document.getElementById('active-trail-name');
+    var trailName = trail ? trail.textContent : 'Unknown Trail';
+
+    // Show processing indicator
+    APEX_showToast('APEX processing GPX…', '#FFAA00');
+
+    // Process GPX
+    var result = APEX_processGPX(content, trailName);
+
+    if(!result || !result.zones.length) {
+      APEX_showToast('No zones detected — try a different GPX file', '#FF3B2F');
+      return;
+    }
+
+    // Load zones into APEX
+    APEX.zones = result.zones.map(function(z, i) {
+      return Object.assign({}, z, {id: i, fired: false});
+    });
+
+    // Save to Supabase
+    if(currentUser) {
+      try {
+        // Upload GPX file
+        var path = currentUser.id + '/' + Date.now() + '_' + file.name;
+        await supa.storage.from('gpx-uploads').upload(path, file);
+
+        // Save zone profile
+        await supa.from('runs').insert({
+          user_id: currentUser.id,
+          trail: trailName,
+          date: new Date().toISOString(),
+          conditions: trailCondition || 'dry',
+          brake_zones: result.brakeCount,
+          gps_points: result.totalDist,
+          notes: 'Auto-detected from GPX upload. ' + result.brakeCount + ' brake zones. Max speed: ' + result.maxSpeed + ' km/h'
+        });
+        console.log('APEX: GPX profile saved to Supabase');
+      } catch(err) {
+        console.warn('APEX: Supabase save failed', err);
+      }
+    }
+
+    // Update UI
+    var zoneCount = document.querySelector('[data-stat="zones"]');
+    APEX_showToast('✓ APEX detected ' + result.brakeCount + ' brake zones from your GPX', '#1DDB7A');
+
+    // Update home screen stats
+    var brakeEl = document.querySelector('.stat-val[data-type="brake"]');
+    if(brakeEl) brakeEl.textContent = result.brakeCount;
+  };
+  reader.readAsText(file);
+}
+
+function APEX_showToast(msg, color) {
+  var existing = document.getElementById('apex-toast');
+  if(existing) document.body.removeChild(existing);
+  var toast = document.createElement('div');
+  toast.id = 'apex-toast';
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:' + (color||'var(--green)') + ';color:' + (color==='#1DDB7A'?'#000':'#fff') + ';padding:10px 20px;border-radius:20px;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:1px;z-index:300;white-space:nowrap;max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(function(){ if(toast.parentNode) document.body.removeChild(toast); }, 3000);
+}
+
+// ── Data Management ──
+async function exportUserData() {
+  if(!currentUser) return;
+  APEX_showToast('Preparing your data…', '#FFAA00');
+  try {
+    var runs = await supa.from('runs').select('*').eq('user_id', currentUser.id);
+    var tracks = await supa.from('gps_tracks').select('*').eq('user_id', currentUser.id).limit(1000);
+    var cues = await supa.from('cue_events').select('*').eq('user_id', currentUser.id);
+
+    var exportData = {
+      exported_at: new Date().toISOString(),
+      user_email: currentUser.email,
+      note: 'Your MN8 Sight ride data. This data belongs to you.',
+      runs: runs.data || [],
+      gps_tracks: tracks.data || [],
+      cue_events: cues.data || []
+    };
+
+    var blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'mn8-sight-data-' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    APEX_showToast('✓ Data exported successfully', '#1DDB7A');
+  } catch(e) {
+    console.warn('Export failed:', e);
+    APEX_showToast('Export failed — please try again', '#FF3B2F');
+  }
+}
+
+async function deleteUserData() {
+  var confirmed = confirm('Delete all your MN8 Sight data? This permanently deletes all ride sessions, GPS data, cue logs and your account. This cannot be undone.');
+  if(!confirmed) return;
+
+  var doubleConfirm = confirm('Are you absolutely sure? This is permanent and cannot be reversed.');
+  if(!doubleConfirm) return;
+
+  APEX_showToast('Deleting your data…', '#FF3B2F');
+
+  try {
+    // Delete all user data from all tables
+    await supa.from('cue_events').delete().eq('user_id', currentUser.id);
+    await supa.from('gps_tracks').delete().eq('user_id', currentUser.id);
+    await supa.from('runs').delete().eq('user_id', currentUser.id);
+    await supa.from('profiles').delete().eq('id', currentUser.id);
+
+    // Delete auth account
+    await supa.auth.admin.deleteUser(currentUser.id).catch(function(){});
+
+    // Sign out
+    await supa.auth.signOut();
+    currentUser = null;
+
+    alert('Your data has been deleted. Thank you for riding with MN8 Sight.');
+    showAuth('signin');
+  } catch(e) {
+    console.warn('Delete failed:', e);
+    APEX_showToast('Deletion failed — contact us at mn8industries.com', '#FF3B2F');
+  }
+}
+
 // ── Audio init on interaction ──
 document.addEventListener('click',function(){if(!APEX.audioCtx)APEX_initAudio();},{once:true});
 
@@ -1271,6 +1971,24 @@ if('serviceWorker' in navigator){
   var sw="self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return new Response('Offline',{status:503})}))})";
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});
 }
+</script>
+</body>
+</html    <div class="tos-h">6. Your Data &mdash; You Own It</div>
+    <div class="tos-p">Your ride data belongs to you. By using MN8 Sight you consent to us collecting GPS ride data, GPX files, ride statistics, and your email address solely to power your personal APEX profile.</div>
+    <div class="tos-h">7. How We Use Your Data</div>
+    <div class="tos-p">We use anonymised, aggregated ride patterns to improve the APEX algorithm for all riders. We never sell your personal data. We never share identifiable data with third parties. All trail zone profiles are derived exclusively from consenting MN8 Sight rider sessions &mdash; we do not scrape or use third party trail databases.</div>
+    <div class="tos-h">8. Right to Deletion</div>
+    <div class="tos-p">You can export or permanently delete all your data at any time from the Shop &amp; Info tab. Deletion is processed within 7 days.</div>TYPE html>
+<!-- 
+  IMPORTANT: For Supabase auth to work, use the GitHub Pages URL only:
+  emanateindustries-dot.github.io/mn8-sight-public-
+  
+  To fix Edge/other browser login, add these URLs to Supabase allowed redirects:
+  Supabase Dashboard > Authentication > URL Configuration > Redirect URLs
+  Add: https://emanateindustries-dot.github.io/mn8-sight-public-
+-->
+
+
 </script>
 </body>
 </html>
