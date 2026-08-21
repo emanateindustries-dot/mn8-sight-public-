@@ -191,7 +191,7 @@
     <div class="tos-h">5. User Responsibilities</div>
     <div class="tos-p">You must be 18 or have parental consent. Always wear appropriate safety gear. Ride within your ability. Comply with all trail rules and local laws. Never rely solely on APEX cues.</div>
     <div class="tos-h">6. Data & Privacy</div>
-    <div class="tos-p">By using MN8 Sight you consent to collection of GPS ride data, GPX files, ride statistics, and your email address. We do not sell your personal data. Full terms at mn8industries.com/terms</div>
+    <div class="tos-p">By using MN8 Sight you consent to collection of GPS ride data, GPX files, ride statistics, and your email address. We do not sell your personal data. Full terms at mn8industries.com/policies/terms</div>
     <div class="tos-h">7. Governing Law</div>
     <div class="tos-p">These Terms are governed by the laws of Victoria, Australia. MN8 Industries reserves the right to update these Terms at any time.</div>
   </div>
@@ -322,7 +322,6 @@
           <div class="label" style="margin-bottom:0">APEX Status</div>
           <div class="apex-badge" id="apex-badge">STANDBY</div>
         </div>
-        <div style="font-size:11px;color:var(--muted2);margin-bottom:4px">&#9679; MN8 Goggle connected &mdash; APEX ready</div>
         <div style="font-size:11px;color:var(--muted2);margin-bottom:4px" id="apex-gps-status">&#9679; GPS acquiring &mdash; APEX standby</div>
         <div style="font-size:11px;color:var(--muted2)">&#9679; APEX profile loaded &mdash; 15 zones active</div>
         <!-- Live panel -->
@@ -344,10 +343,7 @@
       <div id="apex-stop-wrap" style="display:none">
         <button class="btn-red" onclick="apexStop()">&#9632; Stop Session</button>
       </div>
-      <button class="btn-ghost" onclick="syncToGoggle()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        Sync to Goggle
-      </button>
+      
       <button class="btn-ghost" onclick="goTo('cues');setTimeout(function(){var f=document.getElementById('vzb-input');if(f)f.click();},300)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Upload Data
