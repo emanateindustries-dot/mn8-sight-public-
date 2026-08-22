@@ -50,16 +50,16 @@
     .auth-switch span{color:var(--green);cursor:pointer;font-weight:700;}
 
     /* ── ToS ── */
-    #tos{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,8,8,.97);z-index:450;display:none;flex-direction:column;max-width:430px;margin:0 auto;height:100vh;height:-webkit-fill-available;}
+    #tos{position:fixed;inset:0;background:rgba(8,8,8,.97);z-index:450;display:none;flex-direction:column;max-width:430px;margin:0 auto;}
     .tos-hdr{padding:18px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
     .tos-title{font-size:15px;font-weight:800;color:var(--text);letter-spacing:1px;}
     .tos-sub{font-size:11px;color:var(--muted2);margin-top:2px;}
-    .tos-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 20px;min-height:0;overscroll-behavior:contain;}
+    .tos-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 20px;}
     .tos-warn{background:rgba(255,59,47,.1);border:1px solid rgba(255,59,47,.3);border-radius:8px;padding:12px 14px;margin-bottom:12px;}
     .tos-warn-txt{font-size:12px;font-weight:700;color:var(--red);line-height:1.6;}
     .tos-h{font-size:12px;font-weight:800;color:var(--text);margin:14px 0 4px;letter-spacing:.5px;}
     .tos-p{font-size:11px;color:var(--muted2);line-height:1.7;margin-bottom:8px;}
-    .tos-ftr{padding:14px 20px 28px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg);}
+    .tos-ftr{padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;}
     .tos-chk-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
     .tos-chk{width:20px;height:20px;flex-shrink:0;margin-top:2px;accent-color:var(--green);}
     .tos-chk-lbl{font-size:12px;color:var(--muted2);line-height:1.5;}
@@ -192,10 +192,8 @@
     <div class="tos-p">You must be 18 or have parental consent. Always wear appropriate safety gear. Ride within your ability. Comply with all trail rules and local laws. Never rely solely on APEX cues.</div>
     <div class="tos-h">6. Data & Privacy</div>
     <div class="tos-p">By using MN8 Sight you consent to collection of GPS ride data, GPX files, ride statistics, and your email address. We do not sell your personal data. Full terms at mn8industries.com/policies/terms</div>
-    <div class="tos-h">6. Your Data — You Own It</div>
-    <div class="tos-p">Your ride data belongs to you. By using MN8 Sight you consent to us collecting GPS ride data, GPX files, ride statistics, and your email address solely to power your personal APEX profile.</div>
     <div class="tos-h">7. How We Use Your Data</div>
-    <div class="tos-p">We use anonymised, aggregated ride patterns to improve the APEX algorithm for all riders. We never sell your personal data. We never share identifiable data with third parties. All trail zone profiles are derived exclusively from consenting MN8 Sight rider sessions — we do not scrape or use third party trail databases.</div>
+    <div class="tos-p">We use anonymised, aggregated ride patterns to improve the APEX algorithm for all riders. We never sell your personal data. We never share identifiable data with third parties. All trail zone profiles are derived exclusively from consenting MN8 Sight rider sessions &mdash; we do not scrape or use third party trail databases.</div>
     <div class="tos-h">8. Right to Deletion</div>
     <div class="tos-p">You can export or permanently delete all your data at any time from the Shop &amp; Info tab. Deletion is processed within 7 days.</div>
     <div class="tos-h">9. Governing Law</div>
@@ -467,74 +465,6 @@
         <!-- Push to APEX -->
         <div style="padding:12px 14px">
           <button onclick="zi_pushToApex()" class="btn-green" style="width:100%;padding:12px">Push to APEX &rarr;</button>
-          <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px">Commit zones fire the rising go tone as you exit a brake zone</div>
-        </div>
-      </div>
-
-            <!-- Zone Interpreter -->
-      <div class="card" style="margin-bottom:10px">
-        <div class="card-pad" style="border-bottom:1px solid var(--border)">
-          <div class="eyebrow">Alpha Tool</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px">Interpret &amp; Add Zones</div>
-          <div style="font-size:12px;color:var(--muted2)">Review your detected zones and manually add commit zones.</div>
-        </div>
-
-        <!-- Detected zones -->
-        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
-          <div class="label" style="margin-bottom:8px">Detected from Last Run &mdash; Southern Cross</div>
-          <div id="zi-detected-list">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
-                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Upper entry</div><div style="font-size:10px;color:var(--muted2)">20% along trail &nbsp;&#183;&nbsp; 32 &rarr; 15 km/h</div></div>
-              </div>
-              <button onclick="zi_addCommit(0)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
-                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Rock section</div><div style="font-size:10px;color:var(--muted2)">35% along trail &nbsp;&#183;&nbsp; 28 &rarr; 15 km/h</div></div>
-              </div>
-              <button onclick="zi_addCommit(1)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
-                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Flat-to-climb &#9733;</div><div style="font-size:10px;color:var(--muted2)">52% along trail &nbsp;&#183;&nbsp; 53 &rarr; 32 km/h</div></div>
-              </div>
-              <button onclick="zi_addCommit(2)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
-                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Mid berm</div><div style="font-size:10px;color:var(--muted2)">70% along trail &nbsp;&#183;&nbsp; 40 &rarr; 22 km/h</div></div>
-              </div>
-              <button onclick="zi_addCommit(3)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
-                <div><div style="font-size:12px;font-weight:700;color:var(--text)">Brake &mdash; Lower section</div><div style="font-size:10px;color:var(--muted2)">87% along trail &nbsp;&#183;&nbsp; 38 &rarr; 18 km/h</div></div>
-              </div>
-              <button onclick="zi_addCommit(4)" style="background:rgba(29,219,122,.1);border:1px solid var(--green);border-radius:6px;padding:4px 10px;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--green);cursor:pointer">+ Commit</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Added commit zones -->
-        <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div class="label" style="margin-bottom:0">Added Commit Zones</div>
-            <button onclick="zi_clearCommits()" style="background:none;border:none;font-family:inherit;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer">Clear All</button>
-          </div>
-          <div id="zi-commit-list">
-            <div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 0">No commit zones added yet &mdash; tap + Commit above</div>
-          </div>
-        </div>
-
-        <!-- Push -->
-        <div style="padding:12px 14px">
-          <button onclick="zi_pushToApex()" style="width:100%;background:var(--green);color:#000;border:none;border-radius:8px;padding:12px;font-family:inherit;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Push to APEX &rarr;</button>
           <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:8px">Commit zones fire the rising go tone as you exit a brake zone</div>
         </div>
       </div>
@@ -1008,10 +938,10 @@ async function init() {
   var tos = localStorage.getItem('mn8_tos');
   if(session.data.session) {
     currentUser=session.data.session.user;
-    if(!tos) { hide('loading'); var tosEl=document.getElementById('tos');if(tosEl){tosEl.style.display='flex';} }
+    if(!tos) { hide('loading'); show('tos',true); }
     else { onSignedIn(); }
   } else {
-    if(!tos) { hide('loading'); var tosEl=document.getElementById('tos');if(tosEl){tosEl.style.display='flex';} }
+    if(!tos) { hide('loading'); show('tos',true); }
     else { hide('loading'); showAuth('signin'); }
   }
   supa.auth.onAuthStateChange(function(event,session) {
@@ -1941,16 +1871,26 @@ async function exportUserData() {
 async function deleteUserData() {
   var confirmed = confirm('Delete all your MN8 Sight data? This permanently deletes all ride sessions, GPS data, cue logs and your account. This cannot be undone.');
   if(!confirmed) return;
+
   var doubleConfirm = confirm('Are you absolutely sure? This is permanent and cannot be reversed.');
   if(!doubleConfirm) return;
+
   APEX_showToast('Deleting your data…', '#FF3B2F');
+
   try {
+    // Delete all user data from all tables
     await supa.from('cue_events').delete().eq('user_id', currentUser.id);
     await supa.from('gps_tracks').delete().eq('user_id', currentUser.id);
     await supa.from('runs').delete().eq('user_id', currentUser.id);
     await supa.from('profiles').delete().eq('id', currentUser.id);
+
+    // Delete auth account
+    await supa.auth.admin.deleteUser(currentUser.id).catch(function(){});
+
+    // Sign out
     await supa.auth.signOut();
     currentUser = null;
+
     alert('Your data has been deleted. Thank you for riding with MN8 Sight.');
     showAuth('signin');
   } catch(e) {
@@ -1967,7 +1907,11 @@ if('serviceWorker' in navigator){
   var sw="self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return new Response('Offline',{status:503})}))})";
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});
 }
-
+/* IMPORTANT: For Supabase auth to work, use the GitHub Pages URL only:
+   emanateindustries-dot.github.io/mn8-sight-public-
+   To fix Edge/other browser login, add these URLs to Supabase allowed redirects:
+   Supabase Dashboard > Authentication > URL Configuration > Redirect URLs
+   Add: https://emanateindustries-dot.github.io/mn8-sight-public- */
 </script>
 </body>
 </html>
