@@ -50,16 +50,16 @@
     .auth-switch span{color:var(--green);cursor:pointer;font-weight:700;}
 
     /* ── ToS ── */
-    #tos{position:fixed;inset:0;background:rgba(8,8,8,.97);z-index:450;display:none;flex-direction:column;max-width:430px;margin:0 auto;}
+    #tos{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,8,8,.97);z-index:450;display:none;flex-direction:column;max-width:430px;margin:0 auto;height:100vh;height:-webkit-fill-available;}
     .tos-hdr{padding:18px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;}
     .tos-title{font-size:15px;font-weight:800;color:var(--text);letter-spacing:1px;}
     .tos-sub{font-size:11px;color:var(--muted2);margin-top:2px;}
-    .tos-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 20px;}
+    .tos-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 20px;min-height:0;overscroll-behavior:contain;}
     .tos-warn{background:rgba(255,59,47,.1);border:1px solid rgba(255,59,47,.3);border-radius:8px;padding:12px 14px;margin-bottom:12px;}
     .tos-warn-txt{font-size:12px;font-weight:700;color:var(--red);line-height:1.6;}
     .tos-h{font-size:12px;font-weight:800;color:var(--text);margin:14px 0 4px;letter-spacing:.5px;}
     .tos-p{font-size:11px;color:var(--muted2);line-height:1.7;margin-bottom:8px;}
-    .tos-ftr{padding:14px 20px;border-top:1px solid var(--border);flex-shrink:0;}
+    .tos-ftr{padding:14px 20px 28px;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg);}
     .tos-chk-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
     .tos-chk{width:20px;height:20px;flex-shrink:0;margin-top:2px;accent-color:var(--green);}
     .tos-chk-lbl{font-size:12px;color:var(--muted2);line-height:1.5;}
@@ -192,6 +192,12 @@
     <div class="tos-p">You must be 18 or have parental consent. Always wear appropriate safety gear. Ride within your ability. Comply with all trail rules and local laws. Never rely solely on APEX cues.</div>
     <div class="tos-h">6. Data & Privacy</div>
     <div class="tos-p">By using MN8 Sight you consent to collection of GPS ride data, GPX files, ride statistics, and your email address. We do not sell your personal data. Full terms at mn8industries.com/policies/terms</div>
+    <div class="tos-h">6. Your Data — You Own It</div>
+    <div class="tos-p">Your ride data belongs to you. By using MN8 Sight you consent to us collecting GPS ride data, GPX files, ride statistics, and your email address solely to power your personal APEX profile.</div>
+    <div class="tos-h">7. How We Use Your Data</div>
+    <div class="tos-p">We use anonymised, aggregated ride patterns to improve the APEX algorithm for all riders. We never sell your personal data. We never share identifiable data with third parties. All trail zone profiles are derived exclusively from consenting MN8 Sight rider sessions — we do not scrape or use third party trail databases.</div>
+    <div class="tos-h">8. Right to Deletion</div>
+    <div class="tos-p">You can export or permanently delete all your data at any time from the Shop &amp; Info tab. Deletion is processed within 7 days.</div>
     <div class="tos-h">9. Governing Law</div>
     <div class="tos-p">These Terms are governed by the laws of Victoria, Australia. MN8 Industries reserves the right to update these Terms at any time.</div>
   </div>
@@ -1002,10 +1008,10 @@ async function init() {
   var tos = localStorage.getItem('mn8_tos');
   if(session.data.session) {
     currentUser=session.data.session.user;
-    if(!tos) { hide('loading'); show('tos',true); }
+    if(!tos) { hide('loading'); var tosEl=document.getElementById('tos');if(tosEl){tosEl.style.display='flex';} }
     else { onSignedIn(); }
   } else {
-    if(!tos) { hide('loading'); show('tos',true); }
+    if(!tos) { hide('loading'); var tosEl=document.getElementById('tos');if(tosEl){tosEl.style.display='flex';} }
     else { hide('loading'); showAuth('signin'); }
   }
   supa.auth.onAuthStateChange(function(event,session) {
@@ -1935,26 +1941,16 @@ async function exportUserData() {
 async function deleteUserData() {
   var confirmed = confirm('Delete all your MN8 Sight data? This permanently deletes all ride sessions, GPS data, cue logs and your account. This cannot be undone.');
   if(!confirmed) return;
-
   var doubleConfirm = confirm('Are you absolutely sure? This is permanent and cannot be reversed.');
   if(!doubleConfirm) return;
-
   APEX_showToast('Deleting your data…', '#FF3B2F');
-
   try {
-    // Delete all user data from all tables
     await supa.from('cue_events').delete().eq('user_id', currentUser.id);
     await supa.from('gps_tracks').delete().eq('user_id', currentUser.id);
     await supa.from('runs').delete().eq('user_id', currentUser.id);
     await supa.from('profiles').delete().eq('id', currentUser.id);
-
-    // Delete auth account
-    await supa.auth.admin.deleteUser(currentUser.id).catch(function(){});
-
-    // Sign out
     await supa.auth.signOut();
     currentUser = null;
-
     alert('Your data has been deleted. Thank you for riding with MN8 Sight.');
     showAuth('signin');
   } catch(e) {
@@ -1971,23 +1967,6 @@ if('serviceWorker' in navigator){
   var sw="self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return new Response('Offline',{status:503})}))})";
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});
 }
-</script>
-</body>
-</html    <div class="tos-h">6. Your Data &mdash; You Own It</div>
-    <div class="tos-p">Your ride data belongs to you. By using MN8 Sight you consent to us collecting GPS ride data, GPX files, ride statistics, and your email address solely to power your personal APEX profile.</div>
-    <div class="tos-h">7. How We Use Your Data</div>
-    <div class="tos-p">We use anonymised, aggregated ride patterns to improve the APEX algorithm for all riders. We never sell your personal data. We never share identifiable data with third parties. All trail zone profiles are derived exclusively from consenting MN8 Sight rider sessions &mdash; we do not scrape or use third party trail databases.</div>
-    <div class="tos-h">8. Right to Deletion</div>
-    <div class="tos-p">You can export or permanently delete all your data at any time from the Shop &amp; Info tab. Deletion is processed within 7 days.</div>TYPE html>
-<!-- 
-  IMPORTANT: For Supabase auth to work, use the GitHub Pages URL only:
-  emanateindustries-dot.github.io/mn8-sight-public-
-  
-  To fix Edge/other browser login, add these URLs to Supabase allowed redirects:
-  Supabase Dashboard > Authentication > URL Configuration > Redirect URLs
-  Add: https://emanateindustries-dot.github.io/mn8-sight-public-
--->
-
 
 </script>
 </body>
