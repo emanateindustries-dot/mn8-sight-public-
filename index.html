@@ -2112,6 +2112,17 @@ async function APEX_handleGPXUpload(file) {
       }
     }
 
+    // Update UI
+    var zoneCount = document.querySelector('[data-stat="zones"]');
+    APEX_showToast('✓ APEX detected ' + result.brakeCount + ' brake zones from your GPX', '#1DDB7A');
+
+    // Update home screen stats
+    var brakeEl = document.querySelector('.stat-val[data-type="brake"]');
+    if(brakeEl) brakeEl.textContent = result.brakeCount;
+  };
+  reader.readAsText(file);
+}
+
 // ── Strava Connect ──
 async function stravaGetToken() {
   var s = await supa.auth.getSession();
@@ -2232,17 +2243,6 @@ async function stravaDoImport(activityId, startDate, trailId, btn) {
   window.history.replaceState({}, '', newUrl);
   setTimeout(stravaRefreshButtonLabel, 500);
 })();
-
-    // Update UI
-    var zoneCount = document.querySelector('[data-stat="zones"]');
-    APEX_showToast('✓ APEX detected ' + result.brakeCount + ' brake zones from your GPX', '#1DDB7A');
-
-    // Update home screen stats
-    var brakeEl = document.querySelector('.stat-val[data-type="brake"]');
-    if(brakeEl) brakeEl.textContent = result.brakeCount;
-  };
-  reader.readAsText(file);
-}
 
 function APEX_showToast(msg, color) {
   var existing = document.getElementById('apex-toast');
