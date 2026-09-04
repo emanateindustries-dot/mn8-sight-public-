@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- BUILD MARKER: trail-gating-and-trail-id-v1 — if you don't see this comment in view-source on the live site, the deploy didn't pick up the latest file -->
+<!-- BUILD MARKER: v4-alpha — if you don't see this comment in view-source on the live site, the deploy didn't pick up the latest file -->
 <!-- 
   IMPORTANT: For Supabase auth to work, use the GitHub Pages URL only:
   emanateindustries-dot.github.io/mn8-sight-public-
@@ -302,6 +302,7 @@
   <div class="header">
     <div class="header-brand">
       <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAAA/CAYAAABn/8O7AAASd0lEQVR42u2defAlVXXHP6ff+82AwgACDkspoiJgEBJECKESVBYXCCQGBTQYCGglUFGUUKQKhDKLJVSIYTEKCasSGFAWg2IxqDEisgQ3ikTAAQGhIICAwzAzv99775s/+hzmTk/32379FpK5VV3v93uv+95zzz337Pc0Gq51/PNXkr4g6TUAkhoM2eJZSTtJulzSCo2utSRdL+ndyfgZNTdJ5p+bSnq6gDtJmvPPi/y+5pA4yyR9SNKSpM9JtpjjC5IukXRAEeZ0EnW0JyQdMiwRJog8WtIzY0bWlyQtHgURJgS4RbKhaiHABGd7SbpL09++JmmndWikho7THfeuQYkwQeT7KvocJRds+98/k/Rq5yTZCAhwc+cGtRBg3CfpZEmrkvm0ppDwWsmcV0k6Op1DHchuAi3/+3xJGwOdQH4fCyRJmwP/AAhoe5+jbg2f/yywI/D3Ztbx76e2SWqYWUvSccBZwELHWWNKYW8A5jSyALhE0gd8Do1eBCh/ML3aXYjwjcAhycD9EK+Ao4DtEkQWW7sPGIqtDO5OyX0LgDngKEmHm9ncoLrYOInPN+xvAWf7vMo2TbsEZ+O8ynDd9O86wD9KWmxm7V4EaP5gejV6EOzRZqaKxV6HSPzeP/Vnrcsu6heGdMLFZzIfp6z/DnCepK2A9iiMkjqac+kzgUX+VVayBo0SnI3zqsJ14Hlr4CxJVrXTgxPdCpzvf7edWxwFHOAdWUI0QRR7SNoe+IWkzBFWJUraknZ1ztkpIFPJ503AFQlRb+0coAz5Bjznvyshxh2AdwDblIyV+fy2BM43s8Oc23Smifs5vvYE3umcplnBNG4H7gCeGvf+cJxtBuwP/GYXqXcEcAY9DIuLK5DxiUTBLHvupF5KdaJIf6rC8Ii+jy15dktJsyVKfRgVyyrGXCzph4V7y8Y8cr5upbqNkMRYu7ALvtqSzpiiTfN3FXQSuP/rXgR4haSmpA38c0ZSw6/7ShYyLJ47wqIsM0YkmV8LvZ9OoZ/4+55Avo+/wD937EGAD/l9jeSa8b52kLS8YJ2lz7ckPVeHVVwzAWb+eVfJosa870/wW5z/OK+ZZN4vlsw7cH9xTyPEzFquq7XMbA7IzKwNXOX3dAqiDOBtwM4ufrNyVcbk973JWXJWUAEALo1+Uzj6NELaZpZec5KaZvYAcFqiVlAC/ybAJV3gn2Rb1U2nlmRmJl+v9iSugAN4AXiooFKRqG7bDYPcWLSvlFhglrhk3u9AlI0R3x3ugHUKetyMW6bXFcacb2s7EZ4D/IfrI+0SRbkFvFfSceEumCICzLrbKKYpMZZUsrbFtkk2RMcdFwf3Av9ZwgXD73OY78S5oljyRd0AONTvTeHoOOC39jJkhkRKwH80sLJkd8YcBHxW0huSZ6ZCtepH7E/RZukGbzMbfi2tA1yeWD5Fi/JNkvYqUeZDL9wXeI3fm5VYU1eNQgRGn2b2EPCJClFs/t3mwDn+/7RwwQW9Npnrf9mkdECg4fqsAdsmOE03kYC7snnuwpuA5SWUHmL0/SWDByc6omRHhy74a+DGEu5aV2s7oi4Ebq4QxU1XAw4Cjp0CB3Xg8JESrhJM4PWS9nb9rzMpHdDHbwEHAq9KXHZFmGebw3IRF40PSrrL/VJpFCMI8iBJpwGzIRrcl7XIgVOBs4ROudTMHq9T/JZwiVjEE1yV2LjEGR6EeZakW+pWCYYkwMuBP6r4bQFwjaSzge+XSKdxit0/dAmjEu6XAc8D585nRzd8Ea90AlQBiA6wE7CPmX0r8WN1EodwMfQWrPnKxIAZCQJ9EzXN7OeSTgG+WOLcDcRt6r+/B7CwNMe8sG3HyVJgGfCGAv4C1m3J4+rT2l4KcpjZffPRryKM9m9ubjcLRBjGxJEl4vfwkv463sf/ADf7fe2RspTcGGqa2QXA17tYxW3n2Me6m2HsBonjIzOzlcDHE6JTCR4jFjvJq1UCmxIj9TPMB5Euxhpm9iRwS4nJHQMdLGkjX7iOpFd7mIYK6/ebZrbc+x4HlwmY/xz4VcWiZo7QcyVtOymr2NWXhpl9HfinCgmRsSYWO8mrWaL3BXGeYma3ScrqQuKVrB0XTi3JxcD+idh6N3nMtV24P/P//7XMcBnhonZ8UR8FTk6s+KKOlZGnPn3F52ETcnnEmL/k5dkscabbfAkwOMHNwKMlOzI4yZEJNzuiQmxkbuF9zxe2PWbO0jSzi4FvVIjiIMzflvRXkxDFDmNL0sEuwspgiBS6SYrhdoUIDljPkrRrP+lY/eolz7kYLnNKyzngJp76/vYK5zPAda7jNCag5MdmOpY8m6bKQd0BzpC0S4jEMRGfJTD+TQlHTP9vTlgMNypEcKg3C4HPSWo268GNjDw2/CclYrjlvqC9ydN0NiyxNjP3uS2JLOkJ6Fchip+QdAJ5+lfRSg+3xgbAv0jaJ4hjDBsmMqHfQ57mVMShEvguAn7iBt04cRlrtznwu25sNguumGBK7wR26ZUN8+Vg/X1Q4YxnoZRlyEjS1X4wpZjJEX//xD3pWZcxIiPkjX1kw9iQuynSxL5akUqkZOzTuuFnROlY11SkY7X9zMWHpkXZk/SRChzG/+dmNQ3U9Jjv10qs4Rhjf/f/UeL7A7h2Ui6OClH8MeBpyuOZoSOeKumtY0pYCBi2KxG9oUM/aGZXJOlrE0vHcnwscYdzo4ITL8pqRs6SEv0uELUZsFGF53yWPLuGSYjfoijOP+wx4C9YO8OnOKcNgAs8sWJciQCz3cD3SE170ulY/rnaDcviugaets9q5BoG3An8d4UrQyXEFRzvR2Z2r+tS7UmLjsQqvsp125kSIoy0rbe6X6vqQNWo3DDdNtDUSOEe8NbDAV0Bb3gA+qsVnMxKgIl7rnICnqa8u7BwTyQPfZWdEQkiPEPS7mMWxd0MwmlpjV4bpk59KyZ/jbPefvqOjJPrBjhJNy4uKBfFT7qDulOxqcKBfrkbEXIdqAk047NG0BZ2w2dEqFwHnMgFzLgebcBrSzh3SMOfZjUuWEQ27gF+XCGG0xaOyu+Y2cPuApkm8RGx4hkzu87dMo0SURzz/A3gbE+DmosjDC4VnqpBt40FvKdEnYkAwPZ+6PullKgJXbO+lieQZxm1S9xzBjxSd35b5ot2NbBXD6QHEJf0o9tMsLV8N/8ZsB+wFese6wzx/DFJb3G90ZLd/krXI+toXwaOqXDyNoAvSToIuI3JpWN1yAsUHMS6533i/8eB82rzAxb8dNt7MZ5OyckzJd8/5QfB6bOUx8j9gD18cAck+CmbV3vIujp91Ybx024NSXd38VFOU+t0O3FZtw6YJqo+RH44uiqmGxmy/+6Rh2xaDtN0sYobZrYU+GfKY8WpOC4rV1GXhGkDH+lilIjJluVIy3OUZcM03EY4XZKNwukbZz6u7OPeK7qcnJu21nFOeDJ54kUVEVaVxKhzI/wQ+FQi+jslorg54ausXk3A92EzW4Znw6jHNfBCOTe7EViRICk9ppcBTwC3zCPxtG64+7GKZWbPk0d0HvG5zRXmN+w1qI/ybxMiDM7brgGOuq+AK1wyHzCzq8PozBJjIL3i++YQC/VSUJ88fdwSh2T6941m9oIjc1CCMfLzDyms84J7wLktIw8tLnPjogqPva6h4A1/oxPhfsD9rClIZFN2BVx3A/ua2TW+5u3ww60gz1BRwUVi5KfThlXcDTiP/BxFUcSuBC6dR+bLareitmLtE1eR1v/rUcnhRAw+4GXSjgE+TF4waZMSXNLDFTUUnhM4vi1pd/KjD4cCu/vm3GxSKjPwIvkxjTbwXZeG15rZ6qhv+NLNkl4HbEF5Aub9ZrZ8nhbkzsArEj2lATzvCzhwGlM8I+lVwOspP075mJ+qG1maVPF0nKQF7nTddECVIgPuM7MXhrXQ0/Clw7ER8DomE1fP3O/5DDBnZrNVOJtom7KQ0dBzmIZilkkxIptCHMUB+VLYrMfhGs2Xg1T1P9+d4BOyUcE95GYalgBqg7cGWGpDS2K8rW/r2/q2vq1vpRbLRHW0Khbdz/h1sPdRzLMMrrJxRimeiuPNB89jI8AkKmGpqfx/rblemvnCtFjfJk+AJeb8pownQfT5IhG4ZblJH88+128GdSS8loy1gDxlqK7W8mhJcfxFrJ0Rs3pY10sfc13IuscfyvA8w5pq+5NonWZKfJK2AP4A2Ac4mMGcqgMP7lzoAOD2yDhxgtqDPIpS9eKYgOkt9K7Gb6wJ4rf8u93IIxk7+ly3q2GeMZ87gf1Sa9Rhu5S8vswsuaN4CXBsHDavifCir9/38WJzNhzPPyjgeW/ymjiDHiewLmvSr4VswC+bcYhF0vHAqeRVq8bZZiq+26iPZxu9uF7EmiVtTR4pOI78HEcZQupoVRGIV5DnBS4kd5ZvOGKcvrIPXPWL51G1LZoe3zwd+HSIENaOTT5LHloZFQcsK7q9CnjMCWMxax9uXkF+1M/IEwEq9Tyf20LyZNJTyWvSxBzT8wrx+Qzdi4D3M59HK36PRIEYe5SHr9JEgCC+Mg610vE8KAdcVCDcDvDkAFww1vLxpqSPO/FFXDJKpH0R+C/yYt5PU141qhadKREJ0e4GtvcderuL2lnnHpcAJ/lvK/3ZToH4QqXYEvgmeXwU8hhycKCVwI/I45QPO2HfRl6WYz5zXcsBW3AMF69R6/elTukE1z9wPPfb4pVsp5O/aSCY1XJgV/KY9iC4UxP4JGsC+pkvxoFmdv8kDVUvidsu4RTxyoVOhbsjVIo3AzeQv4UpdKyFwIPAucBNE57j5C3QHH9zA+iYbZcqZc+sLhak75eiX5twIiM/JHS/pEgg6MyT86W5coP6AcuO9VnyW7vEvYIXQbq2QHxN8mzmU8zs2eT+NE2sU6FnDsKtOn1a5llycq4umoq+Bnld7iBzi6q4VvGbDSo9muQn2HZLxMeBkvY3s1tG4B5o+gJ1+tmdqliZLr/FoajPuoU763PMgHPM7MRB4aC+dPp19K94+U7d6oyk5wfkgv2unxz3VVJLkgbqs+n633UJR9kGWCrpW85Fhl0EcwK4izx7+MVwN8SLAOuMBCTvH9nIXUlhFGQubk9MCK/VZ58ZeaX/zV1UWQ/dbwa4w8zu7pIKFskZu0j6aM0GSfT1tmQNpjoZoGlm10v6JHlh63ina5s803a/GsaYdSv6YUlLgYvM7GcFN0ldyG+RHwXcuCBOvxDJr/1wvcSvuA35MchBUq7uJD+SWiXeggD39GuUbWRF3msD0Ingc+T13L7tQM/UOMYC8iTN3YC/BH4s6YKoAT2CWOQi1q0cPzsPf9rKHveEg3vWueT60N6AHDCKjd9K7sHfE3gf+Un/vcrM+AHbholTNFwpHwW2lPRBoNKiHcb9QV47WYXdv+WAxK7EB/oL8nT7qrc2bZpIjmwAXK1298Uo2kLqDS+OjgDDL+T6jszsThcjuCU8bJQg9I/FwHuB44E3+0LNkb/I5ONmdqbrhPPVgzrJezQeY80roiA/g7okeWNmqx/F3Myek7RHhQgOAv+Oi9J+axuGI/o68nLAzRq5ZvR1GHAZY6yzPS8CdGR3EsW74f62OiIgDwGfl3QZeeGid7HmqObxkj4PrJivPhjvSHND5DPkrzEI18oOwIWSTjSz5xP3S1ed0GGa7SbC3Vc5lMVqZi/WqQcn52VW8TJpTec+ZWXTshpLjTX9COb15K9piCSDBcAi/80Kvr6qQtep/6yVLp4TX0Yexflj4HcSV8zRwD6Sjk9dTAVf4CB+sqyLWO5rz3jfTUmtGtezxXSVuetJGONg03OSDgXOLCzaCuDJIhdwrtQhLwzUKuhlL/bwn4XKcAj5W5z29u9mnRMu9fe+XQZ8z8wenifXmRv22fBn1sgB1c1/Oq0ccF/y4411ZoSkOuBmwAdZk4HSSpT1U1P9MxEhoTdmrEkgCHVhd0nH+C5f4m9VskRvC2foM5L2I48bf9q5bQTo9/frWUnLyN99/N0B/WZx79Y1GGr/f9sYKyUVKzkdl4jAgCWqUO3bZ587FPsoE52Sdpd0Q1JRaxSVpaIy1vdjfL8iPPgN/33VMJXH+lzLyO88PJljzHOfFMfz7P/0QqWrZz3hduAU/2bClUZt6ISj+AbgLDO7s5iFnYpsv7fjvrhiRfhOL7gTt4t5MZ9DJe1K/i6Tt7MmQ6ZooQ7aijr0gi4647jazMul/yZwH3nctG4RHP39nDyl61HgGjO7N3ZiF/3TEt+alSxk1o/Yi4JCwYXM7KfASZ6KvjPwe06IHfLw1a41+CEfKBgpAePyMRBewPCwb+IGownF1faeuv8FKQilb4OWouoAAAAASUVORK5CYII=" alt="MN8 SIGHT" style="height:32px;width:auto">
+      <span style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-left:8px;padding:2px 6px;border:1px solid var(--border2);border-radius:4px">v4 ALPHA</span>
     </div>
     <div class="header-right">
       <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">&#9728; LIGHT</button>
@@ -1049,15 +1050,21 @@ function setCondition(type) {
 // see APEX_loadTrailCache / apexStartSession below.
 var TRAILS_CACHE = [];
 var SELECTED_TRAIL = null;
+var TRAILS_CACHE_STATUS = 'idle'; // idle | loading | loaded | error
+var TRAILS_CACHE_ERROR = '';
 
 async function APEX_loadTrailCache() {
+  TRAILS_CACHE_STATUS = 'loading';
   try {
     var res = await supa.from('trails').select('*').order('name', { ascending: true });
     if(res.error) throw res.error;
     TRAILS_CACHE = res.data || [];
+    TRAILS_CACHE_STATUS = 'loaded';
   } catch(e) {
     console.warn('APEX: trail list fetch failed', e);
     TRAILS_CACHE = [];
+    TRAILS_CACHE_STATUS = 'error';
+    TRAILS_CACHE_ERROR = (e && (e.message || e.error_description || e.toString())) || 'Unknown error';
   }
 }
 
@@ -1065,11 +1072,21 @@ function filterTrails(q) {
   var res=document.getElementById('trail-results');
   if(!res) return;
   if(!q||q.length<2){res.style.display='none';return;}
+  if(TRAILS_CACHE_STATUS==='error'){
+    res.innerHTML="<div class='sri'><div class='sri-name' style='color:#FF3B2F'>Couldn't load trail list: "+TRAILS_CACHE_ERROR+"</div></div>";
+    res.style.display='block';
+    return;
+  }
+  if(TRAILS_CACHE_STATUS==='loading'||TRAILS_CACHE_STATUS==='idle'){
+    res.innerHTML="<div class='sri'><div class='sri-name' style='color:var(--muted)'>Loading trails…</div></div>";
+    res.style.display='block';
+    return;
+  }
   var ql=q.toLowerCase();
   var matches=TRAILS_CACHE.filter(function(t){
     return t.name.toLowerCase().includes(ql) || (t.region||'').toLowerCase().includes(ql) || (t.park||'').toLowerCase().includes(ql);
   });
-  if(!matches.length){res.innerHTML="<div class='sri'><div class='sri-name' style='color:var(--muted)'>No trails found — only major trails are listed</div></div>";res.style.display='block';return;}
+  if(!matches.length){res.innerHTML="<div class='sri'><div class='sri-name' style='color:var(--muted)'>No trails found — only major trails are listed ("+TRAILS_CACHE.length+" loaded)</div></div>";res.style.display='block';return;}
   res.innerHTML=matches.map(function(t){return "<div class='sri' data-id='"+t.id+"'><div><div class='sri-name'>"+t.name+"</div><div class='sri-meta'>"+(t.park||'')+" — "+(t.region||'')+"</div></div><div class='sri-diff'>"+(t.difficulty||'')+"</div></div>";}).join('');
   res.style.display='block';
   res.onclick=function(e){var item=e.target.closest('[data-id]');if(item)selectTrail(item.getAttribute('data-id'));}
@@ -2304,10 +2321,19 @@ async function deleteUserData() {
 // ── Audio init on interaction ──
 document.addEventListener('click',function(){if(!APEX.audioCtx)APEX_initAudio();},{once:true});
 
-// ── Service Worker ──
+// ── Service Worker: forcibly remove any previously-registered SW ──
+// A stale worker from an earlier build can keep serving old cached
+// assets forever, independent of what's actually deployed. We don't
+// need offline support badly enough to risk this, so we clear it out.
 if('serviceWorker' in navigator){
-  var sw="self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return new Response('Offline',{status:503})}))})";
-  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){});
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ r.unregister(); });
+  }).catch(function(){});
+}
+if(window.caches && caches.keys){
+  caches.keys().then(function(names){
+    names.forEach(function(n){ caches.delete(n); });
+  }).catch(function(){});
 }
 /* IMPORTANT: For Supabase auth to work, use the GitHub Pages URL only:
    emanateindustries-dot.github.io/mn8-sight-public-
