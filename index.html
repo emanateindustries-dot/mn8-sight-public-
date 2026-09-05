@@ -296,6 +296,27 @@
   </div>
 </div>
 
+<!-- User menu -->
+<div class="auth-screen" id="user-menu-overlay" style="display:none">
+  <div class="auth-card" style="max-width:340px">
+    <div class="auth-title" id="user-menu-email" style="font-size:14px;word-break:break-all">Rider</div>
+    <button class="btn-ghost" onclick="hide('user-menu-overlay'); APEX_openBugReport();" style="margin-bottom:8px;margin-top:12px">Report a problem</button>
+    <button class="btn-ghost" onclick="hide('user-menu-overlay'); signOut();" style="margin-bottom:8px">Sign out</button>
+    <button class="btn-ghost" onclick="hide('user-menu-overlay')">Cancel</button>
+  </div>
+</div>
+
+<!-- Bug report -->
+<div class="auth-screen" id="bug-report-overlay" style="display:none">
+  <div class="auth-card" style="max-width:420px">
+    <div class="auth-title">Report a problem</div>
+    <div class="auth-desc">What went wrong? This goes straight through for review along with what screen you were on and your last few taps — no need to screenshot anything.</div>
+    <textarea id="bug-report-input" rows="5" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px;font-family:inherit;font-size:13px;color:var(--text);resize:vertical;margin-bottom:16px" placeholder="e.g. Trail search shows nothing when I type a trail name"></textarea>
+    <button class="btn-green" onclick="APEX_submitBugReport()" style="margin-bottom:8px">Send Report</button>
+    <button class="btn-ghost" onclick="hide('bug-report-overlay')">Cancel</button>
+  </div>
+</div>
+
 <!-- App -->
 <div id="app">
   
@@ -978,7 +999,9 @@ function completeOnboarding() {
 }
 
 function showUserMenu() {
-  if(confirm('Sign out of MN8 Sight?')) signOut();
+  var emailEl = document.getElementById('user-menu-email');
+  if(emailEl) emailEl.textContent = currentUser ? currentUser.email : 'Rider';
+  show('user-menu-overlay', true);
 }
 
 function setMsg(id,txt,color) {
@@ -1013,6 +1036,87 @@ function goTo(name) {
   if(sc) sc.classList.add('active');
   if(nb) nb.classList.add('active');
   if(name==='runs') loadRuns();
+  APEX_crumb('nav: ' + name);
+}
+
+// ── Bug grabber: breadcrumbs + auto error capture + manual report ──
+var APEX_BREADCRUMBS = [];
+function APEX_crumb(msg) {
+  APEX_BREADCRUMBS.push({t: Date.now(), m: String(msg).slice(0,80)});
+  if(APEX_BREADCRUMBS.length > 15) APEX_BREADCRUMBS.shift();
+}
+document.addEventListener('click', function(e){
+  var el = e.target.closest('button, .nav-btn, [onclick]');
+  if(!el) return;
+  var label = (el.textContent||'').trim().replace(/\s+/g,' ').slice(0,40) || el.id || el.className.toString().slice(0,30);
+  APEX_crumb('tap: ' + label);
+}, true);
+
+function APEX_currentScreen() {
+  var active = document.querySelector('.screen.active');
+  if(active) return active.id;
+  var appEl = document.getElementById('app');
+  if(appEl && appEl.style.display==='flex') return 'app-home';
+  return 'auth';
+}
+
+var APEX_ERROR_COUNT = 0, APEX_ERROR_MAX = 5;
+var APEX_LOGGED_MESSAGES = {};
+async function APEX_logClientError(kind, message, stack, sourceUrl, lineNo, colNo) {
+  if(APEX_ERROR_COUNT >= APEX_ERROR_MAX) return;
+  var key = kind + ':' + message;
+  if(APEX_LOGGED_MESSAGES[key]) return;
+  APEX_LOGGED_MESSAGES[key] = true;
+  APEX_ERROR_COUNT++;
+  try {
+    await supa.from('client_errors').insert({
+      user_id: currentUser ? currentUser.id : null,
+      kind: kind,
+      message: String(message||'').slice(0,2000),
+      stack: String(stack||'').slice(0,4000),
+      source_url: sourceUrl || null,
+      line_no: lineNo || null,
+      col_no: colNo || null,
+      screen: APEX_currentScreen(),
+      breadcrumbs: APEX_BREADCRUMBS,
+      build_marker: 'v4-alpha',
+      user_agent: navigator.userAgent
+    });
+  } catch(e) { console.warn('APEX: failed to log client error', e); }
+  APEX_showToast('Something went wrong — logged for review', '#FF3B2F');
+}
+window.addEventListener('error', function(e){
+  APEX_logClientError('error', e.message, e.error && e.error.stack, e.filename, e.lineno, e.colno);
+});
+window.addEventListener('unhandledrejection', function(e){
+  var r = e.reason;
+  APEX_logClientError('unhandledrejection', (r && r.message) ? r.message : String(r), r && r.stack);
+});
+
+function APEX_openBugReport() {
+  var input = document.getElementById('bug-report-input');
+  if(input) input.value = '';
+  show('bug-report-overlay', true);
+}
+async function APEX_submitBugReport() {
+  var input = document.getElementById('bug-report-input');
+  var text = input ? input.value.trim() : '';
+  hide('bug-report-overlay');
+  try {
+    await supa.from('client_errors').insert({
+      user_id: currentUser ? currentUser.id : null,
+      kind: 'manual',
+      user_note: text || '(no description given)',
+      screen: APEX_currentScreen(),
+      breadcrumbs: APEX_BREADCRUMBS,
+      build_marker: 'v4-alpha',
+      user_agent: navigator.userAgent
+    });
+    APEX_showToast('Report sent — thanks!', '#1DDB7A');
+  } catch(e) {
+    console.warn('APEX: bug report submit failed', e);
+    APEX_showToast("Couldn't send report — try again", '#FF3B2F');
+  }
 }
 
 // ── Theme ──
@@ -2344,4 +2448,4 @@ if(window.caches && caches.keys){
    Add: https://emanateindustries-dot.github.io/mn8-sight-public- */
 </script>
 </body>
-</html
+</html>
