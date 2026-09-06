@@ -668,6 +668,11 @@
       <div class="eyebrow">Performance</div>
       <div class="section-title">Your Runs</div>
 
+      <div id="strava-sync-banner" style="display:none;align-items:center;justify-content:space-between;background:rgba(252,82,0,0.10);border:1px solid rgba(252,82,0,0.35);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+        <span class="ssb-text" style="font-size:12px;font-weight:700;color:var(--text)">New rides found on Strava</span>
+        <button class="btn-white" style="padding:6px 12px;font-size:11px;width:auto" onclick="stravaOpenPicker(APEX_NEW_STRAVA_RIDES)">Review</button>
+      </div>
+
       <div id="runs-list">
         <div style="text-align:center;padding:20px;color:var(--muted2);font-size:12px">Loading your runs…</div>
       </div>
@@ -1676,6 +1681,7 @@ async function loadRuns() {
 
     activeRunIdx = 0;
     loadRunAnalysisData(0);
+    APEX_syncStravaOnOpen();
   } catch(e) {
     list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:12px">Could not load runs</div>';
     console.warn('loadRuns error', e);
@@ -2235,6 +2241,36 @@ async function stravaGetToken() {
   return s.data.session ? s.data.session.access_token : null;
 }
 
+var APEX_NEW_STRAVA_RIDES = [];
+async function APEX_syncStravaOnOpen() {
+  var banner = document.getElementById('strava-sync-banner');
+  if(!currentUser) return;
+  try {
+    var connected = await stravaIsConnected();
+    if(!connected) { if(banner) banner.style.display='none'; return; }
+    var token = await stravaGetToken();
+    if(!token) return;
+    var res = await fetch(SUPA_URL + '/functions/v1/strava-activities', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'sync' })
+    });
+    var data = await res.json();
+    if(!data.ok) throw new Error(data.error);
+    APEX_NEW_STRAVA_RIDES = data.result || [];
+    if(banner) {
+      if(APEX_NEW_STRAVA_RIDES.length) {
+        banner.style.display = 'flex';
+        banner.querySelector('.ssb-text').textContent = APEX_NEW_STRAVA_RIDES.length + ' new ride' + (APEX_NEW_STRAVA_RIDES.length>1?'s':'') + ' found on Strava';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+  } catch(e) {
+    console.warn('APEX: strava sync check failed', e); // background check — fail silently, no toast
+  }
+}
+
 async function stravaIsConnected() {
   if(!currentUser) return false;
   var res = await supa.from('strava_connections').select('user_id').eq('user_id', currentUser.id).maybeSingle();
@@ -2269,20 +2305,23 @@ async function stravaConnect() {
   }
 }
 
-async function stravaOpenPicker() {
+async function stravaOpenPicker(preloadedActivities) {
   show('strava-picker', true);
   var list = document.getElementById('strava-list');
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted2);font-size:12px">Loading your rides…</div>';
   var token = await stravaGetToken();
   try {
-    var res = await fetch(SUPA_URL + '/functions/v1/strava-activities', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'list' })
-    });
-    var data = await res.json();
-    if(!data.ok) throw new Error(data.error);
-    var activities = data.result;
+    var activities = preloadedActivities;
+    if(!activities) {
+      var res = await fetch(SUPA_URL + '/functions/v1/strava-activities', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'list' })
+      });
+      var data = await res.json();
+      if(!data.ok) throw new Error(data.error);
+      activities = data.result;
+    }
     if(!activities.length) {
       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted2);font-size:12px">No recent rides found on Strava</div>';
       return;
@@ -2329,6 +2368,7 @@ async function stravaDoImport(activityId, startDate, trailId, btn) {
       APEX_showToast('✓ Imported ' + data.result.imported + ' GPS points to ' + data.result.trail, '#1DDB7A');
     }
     hide('strava-picker');
+    loadRuns();
   } catch(e) {
     APEX_showToast('Import failed — try again', '#FF3B2F');
     console.warn('Strava import error', e);
