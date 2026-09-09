@@ -74,7 +74,6 @@
     .header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
     .header-brand{display:flex;align-items:center;gap:0;}
     .header-right{display:flex;align-items:center;gap:8px;}
-    .theme-btn{background:none;border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;font-size:10px;letter-spacing:2px;color:var(--muted2);}
     .user-btn{background:var(--green);color:#000;border:none;border-radius:20px;padding:4px 12px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;}
 
     /* Trail bar */
@@ -157,10 +156,7 @@
     .vzb-timeline{height:32px;background:var(--surface2);border-radius:4px;position:relative;cursor:pointer;overflow:hidden;margin-bottom:10px;}
 
     /* Light mode */
-    html.light .section-title{color:#111111!important;}
-    html.light .eyebrow{color:#555555!important;}
-    html.light .label{color:#555555!important;}
-    html.light #rider-level::-webkit-slider-thumb{background:#111111;border-color:#F2F2F0;box-shadow:0 0 0 2px #111111;}
+    /* theme is fixed dark — no light mode */
   </style>
 </head>
 <body>
@@ -328,7 +324,6 @@
       <span style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-left:8px;padding:2px 6px;border:1px solid var(--border2);border-radius:4px">v4 ALPHA</span>
     </div>
     <div class="header-right">
-      <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">&#9728; LIGHT</button>
       <button class="user-btn" id="user-btn" onclick="showUserMenu()">RIDER</button>
     </div>
   </div>
@@ -902,7 +897,6 @@ const SUPA_KEY = "sb_publishable_8bBKmu7BNNOap_8pXVtu9A_-wYVGzpt";
 const supa = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 var currentUser = null;
-var isDark = true;
 
 // ── Screen helpers ──
 function show(id, flex) {
@@ -1122,14 +1116,6 @@ async function APEX_submitBugReport() {
     console.warn('APEX: bug report submit failed', e);
     APEX_showToast("Couldn't send report — try again", '#FF3B2F');
   }
-}
-
-// ── Theme ──
-function toggleTheme() {
-  isDark=!isDark;
-  document.documentElement.classList.toggle('light',!isDark);
-  var btn=document.getElementById('theme-btn');
-  if(btn) btn.textContent=isDark?'☀️ LIGHT':'🌙 DARK';
 }
 
 // ── Trail conditions ──
