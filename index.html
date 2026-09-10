@@ -461,6 +461,21 @@
         <button class="btn-white" onclick="apexStartSession()" id="build-trail-profile-btn" style="margin-top:12px;margin-bottom:0">Build Trail Profile &rarr;</button>
       </div>
 
+      <!-- General Notes — closable, tied to the trail profile (not a single run) -->
+      <div class="card" style="margin-bottom:10px">
+        <div style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="ZE_toggleNotes()">
+          <div>
+            <div class="label" style="margin-bottom:0">General Notes</div>
+            <div style="font-size:10px;color:var(--muted2);margin-top:2px">Notes about this trail's profile overall</div>
+          </div>
+          <span id="ze-notes-chevron" style="font-size:12px;color:var(--muted);transition:transform .15s">&#9662;</span>
+        </div>
+        <div id="ze-notes-body" style="display:none;padding:0 14px 14px">
+          <textarea id="ze-notes-input" rows="4" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px;color:var(--text);resize:vertical;margin-bottom:10px" placeholder="e.g. Cues here run early on wet days — locals brake later than most riders through the rock garden."></textarea>
+          <button class="btn-green" onclick="ZE_saveTrailNotes()" style="margin-bottom:0">Save Notes</button>
+        </div>
+      </div>
+
       <!-- Tone test -->
       <div class="card card-pad" style="margin-bottom:10px">
         <div class="label">Test APEX Tones</div>
@@ -1143,7 +1158,10 @@ function selectTrail(id) {
   }
   APEX_updateStartGate();
   APEX_previewZones(t.name);
-  if(typeof ZE !== 'undefined'){ ZE.cues = []; if(typeof ZE_render==='function') ZE_render(); }
+  var notesBody=document.getElementById('ze-notes-body'); if(notesBody) notesBody.style.display='none';
+  var chevron=document.getElementById('ze-notes-chevron'); if(chevron) chevron.style.transform='';
+  ZE_loadTrailNotes(t.id);
+  if(typeof ZE !== 'undefined'){ ZE.cues = []; ZE_loadRealZonesForTrail(t); }
 }
 
 function ZE_filterTrails(q) {
@@ -1752,6 +1770,130 @@ function ZE_profileFor(lenKm, descentM) {
     pts.push({d:dist, e:e});
   }
   return pts;
+}
+
+function ZE_haversine(lat1,lon1,lat2,lon2) {
+  var R=6371000, p1=lat1*Math.PI/180, p2=lat2*Math.PI/180, dp=(lat2-lat1)*Math.PI/180, dl=(lon2-lon1)*Math.PI/180;
+  var a=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// Pulls this rider's most recent ride on the given trail and runs the
+// same deceleration detector used elsewhere in the app against its real
+// GPS track, seeding the Zone Editor with actual detected brake zones
+// instead of generic sample markers. If there's no ride data yet for
+// this trail, ZE.cues is simply left empty and ZE_render()'s existing
+// fallback (ZE_seedCues) takes over — no real ride, no false claim of
+// real data.
+async function ZE_loadRealZonesForTrail(trail) {
+  if(!trail || !currentUser) { ZE_render(); return; }
+  var sub = document.getElementById('ze-subtitle');
+  if(sub) sub.textContent = trail.name + ' — checking your last ride here…';
+  try {
+    var runRes = await supa.from('runs')
+      .select('session_id')
+      .eq('user_id', currentUser.id)
+      .eq('trail_id', trail.id)
+      .not('session_id','is',null)
+      .order('date', { ascending:false })
+      .limit(1)
+      .maybeSingle();
+    if(runRes.error || !runRes.data || !runRes.data.session_id) { ZE_render(); return; }
+
+    var trackRes = await supa.from('gps_tracks')
+      .select('lat,lon,speed_kmh,recorded_at')
+      .eq('session_id', runRes.data.session_id)
+      .order('recorded_at', { ascending:true });
+    if(trackRes.error || !trackRes.data || trackRes.data.length < 10) { ZE_render(); return; }
+
+    var pts = trackRes.data;
+    var dist = 0;
+    var withDist = pts.map(function(p,i){
+      if(i>0) dist += ZE_haversine(pts[i-1].lat, pts[i-1].lon, p.lat, p.lon);
+      return { speed: p.speed_kmh||0, dist: dist };
+    });
+
+    var W=5;
+    for(var i=0;i<withDist.length;i++){
+      var s=Math.max(0,i-W), e=Math.min(withDist.length,i+W+1), sum=0;
+      for(var j=s;j<e;j++) sum+=withDist[j].speed;
+      withDist[i].smooth = sum/(e-s);
+    }
+
+    var MIN_SPEED=8, DECEL_T=4, WINDOW=6, MIN_GAP=80;
+    var zones=[], lastDist=-MIN_GAP;
+    for(var i=0;i<withDist.length-WINDOW;i++){
+      var pt=withDist[i];
+      if(pt.smooth<MIN_SPEED) continue;
+      var minS=pt.smooth;
+      for(var j=i;j<i+WINDOW;j++) if(withDist[j].smooth<minS) minS=withDist[j].smooth;
+      var decel=pt.smooth-minS;
+      if(decel>DECEL_T && (pt.dist-lastDist)>MIN_GAP){
+        zones.push({ id:'zer'+i, type:'brake', d: pt.dist/1000 });
+        lastDist=pt.dist;
+      }
+    }
+
+    if(zones.length) {
+      ZE.cues = zones;
+      if(sub) sub.textContent = trail.name + ' — ' + zones.length + ' real brake zone' + (zones.length===1?'':'s') + ' from your last ride here';
+    }
+    ZE_render();
+  } catch(e) {
+    console.warn('ZE_loadRealZonesForTrail error', e);
+    ZE_render();
+  }
+}
+
+// ── General trail notes — closable, saved per rider per trail ──
+function ZE_toggleNotes() {
+  var body = document.getElementById('ze-notes-body');
+  var chevron = document.getElementById('ze-notes-chevron');
+  if(!body) return;
+  var open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  if(chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+async function ZE_loadTrailNotes(trailId) {
+  var input = document.getElementById('ze-notes-input');
+  if(!input) return;
+  input.value = '';
+  if(!currentUser || !trailId) return;
+  try {
+    var res = await supa.from('trail_notes')
+      .select('notes')
+      .eq('user_id', currentUser.id)
+      .eq('trail_id', trailId)
+      .maybeSingle();
+    if(!res.error && res.data) input.value = res.data.notes || '';
+  } catch(e) {
+    console.warn('ZE_loadTrailNotes error', e);
+  }
+}
+
+async function ZE_saveTrailNotes() {
+  if(!SELECTED_TRAIL) { APEX_showToast('Select a trail first', '#FF3B2F'); return; }
+  if(!currentUser) return;
+  var input = document.getElementById('ze-notes-input');
+  var text = input ? input.value.trim() : '';
+  var btn = document.querySelector('[onclick="ZE_saveTrailNotes()"]');
+  var originalLabel = btn ? btn.textContent : '';
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  try {
+    var res = await supa.from('trail_notes').upsert({
+      user_id: currentUser.id,
+      trail_id: SELECTED_TRAIL.id,
+      notes: text,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,trail_id' });
+    if(res.error) throw res.error;
+    APEX_showToast('✓ Notes saved', '#1DDB7A');
+  } catch(e) {
+    console.warn('ZE_saveTrailNotes error', e);
+    APEX_showToast('Could not save notes', '#FF3B2F');
+  }
+  if(btn){ btn.disabled=false; btn.textContent=originalLabel; }
 }
 
 function ZE_seedCues(lenKm) {
