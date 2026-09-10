@@ -451,6 +451,21 @@
       <div class="eyebrow">Cue Setup</div>
       <div class="section-title">Set APEX Profile</div>
 
+      <!-- Build Trail Profile — pick which existing trail you're editing cues for -->
+      <div class="card card-pad" style="margin-bottom:10px">
+        <div class="label" style="margin-bottom:6px">Build Trail Profile</div>
+        <div class="search-wrap" style="margin-bottom:0">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="cues-trail-search" type="text" placeholder="Search a trail to edit..." oninput="ZE_filterTrails(this.value)">
+          <div class="search-results" id="cues-trail-results"></div>
+        </div>
+        <div id="cues-editing-trail" style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;margin-top:10px">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0"></div>
+          <div style="font-size:13px;font-weight:700;color:var(--muted2)">No trail selected — search above</div>
+        </div>
+        <button class="btn-white" onclick="apexStartSession()" id="build-trail-profile-btn" style="margin-top:12px;margin-bottom:0">Build Trail Profile &rarr;</button>
+      </div>
+
       <!-- Tone test -->
       <div class="card card-pad" style="margin-bottom:10px">
         <div class="label">Test APEX Tones</div>
@@ -460,6 +475,19 @@
           <button class="cue-btn-go" onclick="APEX_testTone('go')">&#9632; Go</button>
         </div>
         <div style="font-size:10px;color:var(--muted);margin-top:8px;text-align:center">Tap to preview tones through your headphones</div>
+
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="label" style="margin-bottom:0">Go Cue Hold</div>
+            <div id="go-hold-val" style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--green)">Quick beep</div>
+          </div>
+          <input type="range" id="go-hold-slider" min="0" max="3" value="0" step="0.5" oninput="APEX_setGoHold(this.value)" ontouchstart="APEX_setGoHold(this.value)" ontouchmove="APEX_setGoHold(this.value)">
+          <div style="display:flex;justify-content:space-between;margin-top:6px">
+            <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Beep</span>
+            <span style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Hold 3s</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">How long the Go/Commit tone sustains after the trail opens up — longer holds reinforce "stay off the brakes" through a fast section</div>
+        </div>
       </div>
 
       <!-- Zone Editor — visual cue placement (elevation profile + scrub + drag), UI only for now -->
@@ -558,7 +586,6 @@
         </div>
       </div>
 
-      <button class="btn-white" onclick="apexStartSession()" style="margin-top:2px">Build Trail Profile &rarr;</button>
 
       <!-- Rider level -->
       <div class="card card-pad" style="margin-bottom:10px">
@@ -1170,8 +1197,43 @@ function selectTrail(id) {
   var lk=document.getElementById('tdc-link'); if(lk) lk.href=t.trailforks_url||'#';
   var inp=document.getElementById('trail-search'); if(inp) inp.value='';
   var res=document.getElementById('trail-results'); if(res) res.style.display='none';
+  var cinp=document.getElementById('cues-trail-search'); if(cinp) cinp.value='';
+  var cres=document.getElementById('cues-trail-results'); if(cres) cres.style.display='none';
+  var editing=document.getElementById('cues-editing-trail');
+  if(editing) {
+    editing.innerHTML = '<div style="width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0"></div>' +
+      '<div style="flex:1;min-width:0"><div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Editing</div>' +
+      '<div style="font-size:14px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+t.name+'</div></div>';
+    editing.style.background = 'rgba(29,219,122,.08)';
+    editing.style.borderColor = 'var(--green)';
+  }
   APEX_updateStartGate();
   APEX_previewZones(t.name);
+  if(typeof ZE !== 'undefined'){ ZE.cues = []; if(typeof ZE_render==='function') ZE_render(); }
+}
+
+function ZE_filterTrails(q) {
+  var res=document.getElementById('cues-trail-results');
+  if(!res) return;
+  if(!q||q.length<2){res.style.display='none';return;}
+  if(TRAILS_CACHE_STATUS==='error'){
+    res.innerHTML="<div class='sri'><div class='sri-name' style='color:#FF3B2F'>Couldn't load trail list: "+TRAILS_CACHE_ERROR+"</div></div>";
+    res.style.display='block';
+    return;
+  }
+  if(TRAILS_CACHE_STATUS==='loading'||TRAILS_CACHE_STATUS==='idle'){
+    res.innerHTML="<div class='sri'><div class='sri-name' style='color:var(--muted)'>Loading trails…</div></div>";
+    res.style.display='block';
+    return;
+  }
+  var ql=q.toLowerCase();
+  var matches=TRAILS_CACHE.filter(function(t){
+    return t.name.toLowerCase().includes(ql) || (t.region||'').toLowerCase().includes(ql) || (t.park||'').toLowerCase().includes(ql);
+  });
+  if(!matches.length){res.innerHTML="<div class='sri'><div class='sri-name' style='color:var(--muted)'>No trails found</div></div>";res.style.display='block';return;}
+  res.innerHTML=matches.map(function(t){return "<div class='sri' data-id='"+t.id+"'><div><div class='sri-name'>"+t.name+"</div><div class='sri-meta'>"+(t.park||'')+" — "+(t.region||'')+"</div></div><div class='sri-diff'>"+(t.difficulty||'')+"</div></div>";}).join('');
+  res.style.display='block';
+  res.onclick=function(e){var item=e.target.closest('[data-id]');if(item)selectTrail(item.getAttribute('data-id'));}
 }
 
 // Gives the rider immediate feedback on what this trail already knows,
@@ -1202,6 +1264,9 @@ document.addEventListener('click',function(e){
   var res=document.getElementById('trail-results');
   var inp=document.getElementById('trail-search');
   if(res&&inp&&!inp.contains(e.target)&&!res.contains(e.target)) res.style.display='none';
+  var cres=document.getElementById('cues-trail-results');
+  var cinp=document.getElementById('cues-trail-search');
+  if(cres&&cinp&&!cinp.contains(e.target)&&!cres.contains(e.target)) cres.style.display='none';
 });
 
 // ── Rider level ──
@@ -1297,10 +1362,29 @@ function APEX_playTone(type) {
       g.gain.setValueAtTime(0,now+i*.1);g.gain.linearRampToValueAtTime(.3,now+i*.1+.01);g.gain.exponentialRampToValueAtTime(.001,now+i*.1+.18);
       o.start(now+i*.1);o.stop(now+i*.1+.19);
     });
+    if(APEX_GO_HOLD > 0) {
+      // Sustained hold right after the chime — a steady tone reinforcing
+      // "stay off the brakes" through the open section, not just a blip.
+      var holdStart = now + .29;
+      var o2=ctx.createOscillator(),g2=ctx.createGain();
+      o2.connect(g2);g2.connect(ctx.destination);o2.type='sine';o2.frequency.setValueAtTime(1760,holdStart);
+      g2.gain.setValueAtTime(0,holdStart);
+      g2.gain.linearRampToValueAtTime(.16,holdStart+.05);
+      g2.gain.setValueAtTime(.16,holdStart+APEX_GO_HOLD-.15);
+      g2.gain.exponentialRampToValueAtTime(.001,holdStart+APEX_GO_HOLD);
+      o2.start(holdStart);o2.stop(holdStart+APEX_GO_HOLD+.02);
+    }
   }
 }
 
 function APEX_testTone(type) { APEX_initAudio(); APEX_playTone(type); }
+
+var APEX_GO_HOLD = 0; // seconds — 0 = quick two-note beep, >0 = sustained hold after the chime
+function APEX_setGoHold(val) {
+  APEX_GO_HOLD = parseFloat(val);
+  var lbl = document.getElementById('go-hold-val');
+  if(lbl) lbl.textContent = APEX_GO_HOLD === 0 ? 'Quick beep' : ('Hold ' + APEX_GO_HOLD.toFixed(1) + 's');
+}
 
 function APEX_flash(type) {
   var colors={brake:'#FF3B2F',warn:'#FFAA00',go:'#1DDB7A'};
@@ -2532,6 +2616,24 @@ if(window.caches && caches.keys){
   caches.keys().then(function(names){
     names.forEach(function(n){ caches.delete(n); });
   }).catch(function(){});
+}
+
+// ── Service Worker: minimal pass-through, registered fresh ──
+// Chrome on Android will only mint a real installed app (app-drawer icon,
+// standalone launch, proper "Install" prompt) if a service worker with a
+// fetch handler is registered — without one, "Add to Home Screen" silently
+// falls back to a plain bookmark shortcut. This worker does NOT cache
+// anything at all — every request just passes straight to the network —
+// specifically so it can never cause the old stale-content bug again.
+// skipWaiting + clients.claim mean a new deploy takes over immediately,
+// with no old worker ever left running in the background.
+if('serviceWorker' in navigator){
+  var swSrc = "self.addEventListener('install',function(e){self.skipWaiting();});" +
+    "self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});" +
+    "self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request));});";
+  var swBlob = new Blob([swSrc], {type:'application/javascript'});
+  var swUrl = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).catch(function(){});
 }
 /* IMPORTANT: For Supabase auth to work, use the GitHub Pages URL only:
    emanateindustries-dot.github.io/mn8-sight-public-
