@@ -390,13 +390,9 @@
         <span id="strava-btn-label">Connect Strava</span>
       </button>
 
-      <!-- Trail details — conditions + Trailforks info, tucked away since most rides don't need to touch this -->
-      <details style="margin-top:16px">
-        <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2)">
-          <span>Trail Details</span>
-          <span style="font-size:9px;color:var(--muted)">Conditions &middot; Trailforks info</span>
-        </summary>
-        <div style="margin-top:10px">
+      <!-- Trail details — conditions + Trailforks info, hidden until a trail is actually selected -->
+      <div id="trail-details-section" style="display:none;margin-top:16px">
+        <div class="label" style="margin-bottom:8px">Trail Details</div>
 
       <!-- Trail conditions -->
       <div class="card card-pad" style="margin-bottom:10px">
@@ -442,8 +438,7 @@
         </a>
       </div>
 
-        </div>
-      </details>
+      </div>
     </div>
 
     <!-- CUES -->
@@ -1197,6 +1192,7 @@ function selectTrail(id) {
   var lk=document.getElementById('tdc-link'); if(lk) lk.href=t.trailforks_url||'#';
   var inp=document.getElementById('trail-search'); if(inp) inp.value='';
   var res=document.getElementById('trail-results'); if(res) res.style.display='none';
+  var tds=document.getElementById('trail-details-section'); if(tds) tds.style.display='block';
   var cinp=document.getElementById('cues-trail-search'); if(cinp) cinp.value='';
   var cres=document.getElementById('cues-trail-results'); if(cres) cres.style.display='none';
   var editing=document.getElementById('cues-editing-trail');
