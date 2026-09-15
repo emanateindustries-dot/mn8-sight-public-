@@ -515,6 +515,7 @@
             <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--text)" id="ze-r-elev">—</div><div style="font-size:8px;letter-spacing:1px;color:var(--muted)">ELEV</div></div>
             <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--text)" id="ze-r-grade">—</div><div style="font-size:8px;letter-spacing:1px;color:var(--muted)">GRADE</div></div>
           </div>
+          <button id="ze-delete-btn" onclick="ZE_deleteSelected()" style="position:absolute;top:8px;right:8px;background:rgba(255,59,47,.15);border:1px solid var(--red);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--red);cursor:pointer;display:none">&#10005; Delete</button>
         </div>
 
         <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
@@ -534,21 +535,32 @@
           <button class="btn-white" style="margin-bottom:0" onclick="ZE_place()" id="ze-place-btn">Place Cue at 0.00km</button>
         </div>
 
+        <div style="padding:0 14px 14px">
+          <button class="btn-green" onclick="ZE_saveCueZones()" id="ze-save-btn" style="margin-bottom:0">Save Cue Zones</button>
+        </div>
+
         <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap">
           <div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div><div style="font-size:9px;color:var(--muted2)">Brake</div></div>
           <div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber)"></div><div style="font-size:9px;color:var(--muted2)">Warn</div></div>
           <div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div><div style="font-size:9px;color:var(--muted2)">Commit</div></div>
-          <div style="font-size:9px;color:var(--muted);margin-left:auto">Tap a marker to drag &middot; UI preview only</div>
+          <div style="font-size:9px;color:var(--muted);margin-left:auto">Tap a marker to drag or delete</div>
         </div>
       </div>
 
-      <!-- Video zone builder -->
-      <div class="card" style="margin-bottom:10px">
-        <div class="card-pad" style="border-bottom:1px solid var(--border)">
-          <div class="eyebrow">Zone Builder</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px">Video Zone Setter</div>
-          <div style="font-size:12px;color:var(--muted2)">Load a GoPro clip and tap to place cue zones.</div>
+      <!-- Video zone builder — gated behind Coming Soon until the main editor is dialed in -->
+      <div class="card" style="margin-bottom:10px;opacity:.55">
+        <div class="card-pad" style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="eyebrow">Zone Builder</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:2px">Video Zone Setter</div>
+            <div style="font-size:12px;color:var(--muted2)">Load a GoPro clip and tap to place cue zones.</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 8px;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--amber);white-space:nowrap;margin-top:2px">COMING SOON</div>
         </div>
+      </div>
+
+      <!-- Video zone builder UI + logic kept intact below, just not rendered while the section above is gated -->
+      <div id="vzb-hidden-block" style="display:none">
         <div id="vzb-empty" class="vzb-empty" onclick="document.getElementById('vzb-input').click()">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
           <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Tap to load footage</div>
@@ -590,10 +602,6 @@
           <button class="btn-green" style="width:auto;flex:1;padding:11px" onclick="vzb_push()">Push to Cues</button>
           <button onclick="document.getElementById('vzb-input').click()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);cursor:pointer">Load New</button>
         </div>
-        <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--surface2)">
-          <div style="font-size:11px;color:var(--muted2)">Sync direct from GoPro via Bluetooth</div>
-          <div style="background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:3px 8px;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--amber)">COMING SOON</div>
-        </div>
       </div>
 
 
@@ -608,35 +616,7 @@
           <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Novice</span>
           <span style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Pro</span>
         </div>
-      </div>
-
-      <!-- Cue zones -->
-      <div class="card" style="margin-bottom:10px">
-        <div class="card-pad" style="border-bottom:1px solid var(--border)">
-          <div class="label" style="margin-bottom:2px">Cue Zones</div>
-          <div style="font-size:11px;color:var(--muted2)">Lead time adjusts with rider level and conditions</div>
-        </div>
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:10px;height:10px;border-radius:2px;background:var(--red);flex-shrink:0"></div>
-            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Brake Lead</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">Cue fires before braking point</div></div>
-          </div>
-          <div id="brake-lead-val" style="font-size:22px;font-weight:800;color:var(--red)">2.1<span style="font-size:12px;font-weight:400;color:var(--muted2)">s</span></div>
-        </div>
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:10px;height:10px;border-radius:2px;background:var(--amber);flex-shrink:0"></div>
-            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Cue Lead</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">Warning before feature or zone</div></div>
-          </div>
-          <div id="cue-lead-val" style="font-size:22px;font-weight:800;color:var(--amber)">3.0<span style="font-size:12px;font-weight:400;color:var(--muted2)">s</span></div>
-        </div>
-        <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:10px;height:10px;border-radius:2px;background:var(--green);flex-shrink:0"></div>
-            <div><div style="font-size:13px;font-weight:700;color:var(--text)">Commit Zone</div><div style="font-size:11px;color:var(--muted2);margin-top:2px">Off the brakes &mdash; trust the trail</div></div>
-          </div>
-          <div style="font-size:13px;font-weight:700;color:var(--green)">Instant</div>
-        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:10px">Cues fire earlier for Novice, later for Pro — slide toward Pro if cues feel too early, toward Novice if they feel too late</div>
       </div>
 
       <!-- Distance reference -->
@@ -1161,7 +1141,12 @@ function selectTrail(id) {
   var notesBody=document.getElementById('ze-notes-body'); if(notesBody) notesBody.style.display='none';
   var chevron=document.getElementById('ze-notes-chevron'); if(chevron) chevron.style.transform='';
   ZE_loadTrailNotes(t.id);
-  if(typeof ZE !== 'undefined'){ ZE.cues = []; ZE_loadRealZonesForTrail(t); }
+  if(typeof ZE !== 'undefined'){
+    ZE.cues = [];
+    ZE_loadSavedZones(t).then(function(hadSaved){
+      if(!hadSaved) ZE_loadRealZonesForTrail(t);
+    });
+  }
 }
 
 function ZE_filterTrails(q) {
@@ -1757,7 +1742,7 @@ function selectRun(el,idx) {
 }
 
 // ── Zone Editor (visual only — no save/load yet) ──
-var ZE = { type:'brake', scrubD:0, cues:[], draggingId:null, lenKm:8.3, descentM:240 };
+var ZE = { type:'brake', scrubD:0, cues:[], draggingId:null, selectedId:null, lenKm:8.3, descentM:240 };
 var ZE_COLORS = { brake:'#FF3B2F', warn:'#FFAA00', go:'#1DDB7A' };
 
 function ZE_profileFor(lenKm, descentM) {
@@ -1821,7 +1806,7 @@ async function ZE_loadRealZonesForTrail(trail) {
     }
 
     var MIN_SPEED=8, DECEL_T=4, WINDOW=6, MIN_GAP=80;
-    var zones=[], lastDist=-MIN_GAP;
+    var brakeZones=[], lastDist=-MIN_GAP;
     for(var i=0;i<withDist.length-WINDOW;i++){
       var pt=withDist[i];
       if(pt.smooth<MIN_SPEED) continue;
@@ -1829,14 +1814,27 @@ async function ZE_loadRealZonesForTrail(trail) {
       for(var j=i;j<i+WINDOW;j++) if(withDist[j].smooth<minS) minS=withDist[j].smooth;
       var decel=pt.smooth-minS;
       if(decel>DECEL_T && (pt.dist-lastDist)>MIN_GAP){
-        zones.push({ id:'zer'+i, type:'brake', d: pt.dist/1000 });
+        brakeZones.push(pt.dist);
         lastDist=pt.dist;
       }
     }
 
+    // Warn fires ahead of the brake point, Commit just after it — same
+    // offsets already used elsewhere in the app (APEX_processGPX) for
+    // consistency. Auto-placed alongside every real detected brake zone,
+    // not just the brake marker on its own.
+    var zones=[];
+    brakeZones.forEach(function(brakeDist, i){
+      var warnDist = Math.max(0, brakeDist - 100);
+      var commitDist = brakeDist + 150;
+      zones.push({ id:'zer'+i+'w', type:'warn',  d: warnDist/1000 });
+      zones.push({ id:'zer'+i+'b', type:'brake', d: brakeDist/1000 });
+      zones.push({ id:'zer'+i+'g', type:'go',    d: commitDist/1000 });
+    });
+
     if(zones.length) {
       ZE.cues = zones;
-      if(sub) sub.textContent = trail.name + ' — ' + zones.length + ' real brake zone' + (zones.length===1?'':'s') + ' from your last ride here';
+      if(sub) sub.textContent = trail.name + ' — ' + brakeZones.length + ' real brake zone' + (brakeZones.length===1?'':'s') + ' from your last ride here';
     }
     ZE_render();
   } catch(e) {
@@ -1918,6 +1916,71 @@ function ZE_place() {
   ZE_render();
 }
 
+function ZE_deleteSelected() {
+  if(!ZE.selectedId) return;
+  ZE.cues = ZE.cues.filter(function(c){ return c.id !== ZE.selectedId; });
+  ZE.selectedId = null;
+  ZE_render();
+}
+
+// Checks for cue zones this rider has already saved for the trail. If
+// found, these take priority over both real-ride detection and sample
+// data — a saved edit represents the rider's deliberate final call, not
+// a starting guess, so it should never get silently overwritten by a
+// fresh ride's auto-detection. Returns true if saved zones were loaded.
+async function ZE_loadSavedZones(trail) {
+  if(!trail || !currentUser) return false;
+  try {
+    var res = await supa.from('trail_cue_edits')
+      .select('type,dist_km')
+      .eq('user_id', currentUser.id)
+      .eq('trail_id', trail.id)
+      .order('dist_km', { ascending:true });
+    if(res.error || !res.data || !res.data.length) return false;
+    ZE.cues = res.data.map(function(r, i){
+      return { id:'zes'+i, type:r.type, d: r.dist_km };
+    });
+    var sub = document.getElementById('ze-subtitle');
+    if(sub) sub.textContent = trail.name + ' — your saved cue profile';
+    return true;
+  } catch(e) {
+    console.warn('ZE_loadSavedZones error', e);
+    return false;
+  }
+}
+
+// Replaces this rider's saved cue set for the selected trail with
+// whatever's currently on the chart — delete-all-then-insert is simpler
+// and safer here than diffing, since the rider's edits are always meant
+// to be the new source of truth once they hit Save.
+async function ZE_saveCueZones() {
+  if(!SELECTED_TRAIL) { APEX_showToast('Select a trail first', '#FF3B2F'); return; }
+  if(!currentUser) return;
+  if(!ZE.cues.length) { APEX_showToast('Nothing to save yet — place a cue first', '#FFAA00'); return; }
+  var btn = document.getElementById('ze-save-btn');
+  var originalLabel = btn ? btn.textContent : '';
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  try {
+    var delRes = await supa.from('trail_cue_edits')
+      .delete()
+      .eq('user_id', currentUser.id)
+      .eq('trail_id', SELECTED_TRAIL.id);
+    if(delRes.error) throw delRes.error;
+
+    var rows = ZE.cues.map(function(c){
+      return { user_id: currentUser.id, trail_id: SELECTED_TRAIL.id, type: c.type, dist_km: c.d };
+    });
+    var insRes = await supa.from('trail_cue_edits').insert(rows);
+    if(insRes.error) throw insRes.error;
+
+    APEX_showToast('✓ Cue zones saved', '#1DDB7A');
+  } catch(e) {
+    console.warn('ZE_saveCueZones error', e);
+    APEX_showToast('Could not save cue zones', '#FF3B2F');
+  }
+  if(btn){ btn.disabled=false; btn.textContent=originalLabel; }
+}
+
 function ZE_render() {
   var svg = document.getElementById('ze-chart');
   if(!svg) return;
@@ -1973,11 +2036,12 @@ function ZE_render() {
     var x = xFor(c.d), topY = yFor(elevAt(c.d)) - 10;
     var line = document.createElementNS(ns,'line');
     line.setAttribute('x1',x); line.setAttribute('x2',x); line.setAttribute('y1',topY); line.setAttribute('y2',plotBottom);
-    line.setAttribute('stroke',ZE_COLORS[c.type]); line.setAttribute('stroke-width', ZE.draggingId===c.id?'4':'2.5');
+    var isActive = ZE.draggingId===c.id || ZE.selectedId===c.id;
+    line.setAttribute('stroke',ZE_COLORS[c.type]); line.setAttribute('stroke-width', isActive?'4':'2.5');
     line.setAttribute('stroke-linecap','round'); line.dataset.cueId=c.id; line.classList.add('ze-marker'); line.style.cursor='grab';
     svg.appendChild(line);
     var cap = document.createElementNS(ns,'circle'); cap.setAttribute('cx',x); cap.setAttribute('cy',topY);
-    cap.setAttribute('r', ZE.draggingId===c.id?'7':'5.5'); cap.setAttribute('fill',ZE_COLORS[c.type]);
+    cap.setAttribute('r', isActive?'7':'5.5'); cap.setAttribute('fill',ZE_COLORS[c.type]);
     cap.dataset.cueId=c.id; cap.classList.add('ze-marker'); cap.style.cursor='grab';
     svg.appendChild(cap);
   });
@@ -1998,6 +2062,9 @@ function ZE_render() {
   ZE_updateReadout();
   ZE_updateTrack();
   ZE_updatePlaceBtn();
+
+  var delBtn = document.getElementById('ze-delete-btn');
+  if(delBtn) delBtn.style.display = ZE.selectedId ? 'block' : 'none';
 }
 
 function ZE_updateReadout(){
@@ -2050,25 +2117,42 @@ function ZE_updateTrack(){
       var r = svg.getBoundingClientRect();
       return (clientX-r.left) * (1000/r.width);
     }
-    var scrubbing=false, dragId=null;
+    var scrubbing=false, dragId=null, dragStartX=0, dragStartY=0, dragMoved=false;
     svg.addEventListener('pointerdown', function(e){
       var t = e.target.closest ? e.target.closest('.ze-marker') : null;
-      if(t){ dragId=t.dataset.cueId; ZE.draggingId=dragId; svg.setPointerCapture(e.pointerId); ZE_render(); return; }
+      if(t){
+        dragId=t.dataset.cueId; dragStartX=e.clientX; dragStartY=e.clientY; dragMoved=false;
+        svg.setPointerCapture(e.pointerId);
+        return;
+      }
+      ZE.selectedId=null; // tapping empty space deselects any selected marker
       scrubbing=true; svg.setPointerCapture(e.pointerId);
       ZE.scrubD = ZE._dFor ? ZE._dFor(svgXFromClientX(e.clientX)) : 0;
       showReadout(); ZE_render();
     });
     svg.addEventListener('pointermove', function(e){
       if(dragId){
-        var c = ZE.cues.find(function(c){return c.id===dragId;});
-        if(c && ZE._dFor){ c.d = ZE._dFor(svgXFromClientX(e.clientX)); ZE_render(); }
+        if(!dragMoved && (Math.abs(e.clientX-dragStartX)>5 || Math.abs(e.clientY-dragStartY)>5)){
+          dragMoved=true; ZE.draggingId=dragId; ZE.selectedId=null;
+        }
+        if(dragMoved){
+          var c = ZE.cues.find(function(c){return c.id===dragId;});
+          if(c && ZE._dFor){ c.d = ZE._dFor(svgXFromClientX(e.clientX)); ZE_render(); }
+        }
         return;
       }
       if(scrubbing && ZE._dFor){ ZE.scrubD = ZE._dFor(svgXFromClientX(e.clientX)); ZE_render(); }
     });
-    function endDrag(){ dragId=null; ZE.draggingId=null; scrubbing=false; hideReadoutSoon(); }
+    function endDrag(){
+      if(dragId && !dragMoved){
+        // A tap, not a drag — select this marker and offer to delete it.
+        ZE.selectedId = dragId;
+        ZE_render();
+      }
+      dragId=null; ZE.draggingId=null; scrubbing=false; hideReadoutSoon();
+    }
     svg.addEventListener('pointerup', endDrag);
-    svg.addEventListener('pointercancel', endDrag);
+    svg.addEventListener('pointercancel', function(){ dragId=null; ZE.draggingId=null; scrubbing=false; hideReadoutSoon(); });
   });
 })();
 
