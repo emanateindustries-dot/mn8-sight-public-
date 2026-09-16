@@ -518,9 +518,16 @@
           <button id="ze-delete-btn" onclick="ZE_deleteSelected()" style="position:absolute;top:8px;right:8px;background:rgba(255,59,47,.15);border:1px solid var(--red);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--red);cursor:pointer;display:none">&#10005; Delete</button>
         </div>
 
+        <div style="padding:8px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+          <button onclick="ZE_zoomOut()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;width:34px;height:34px;font-size:16px;font-weight:700;color:var(--text);cursor:pointer">&#8722;</button>
+          <div style="text-align:center"><div id="ze-zoom-label" style="font-size:12px;font-weight:700;color:var(--text)">Full trail</div><div style="font-size:9px;color:var(--muted);margin-top:1px">Zoom to fine-tune cue position</div></div>
+          <button onclick="ZE_zoomIn()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;width:34px;height:34px;font-size:16px;font-weight:700;color:var(--text);cursor:pointer">&#43;</button>
+        </div>
+
         <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
           <div id="ze-track" style="position:relative;height:38px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;touch-action:none;overflow:hidden">
             <div id="ze-track-fill" style="position:absolute;top:0;left:0;bottom:0;background:rgba(240,240,240,.06)"></div>
+            <div id="ze-track-viewport" style="position:absolute;top:0;bottom:0;background:rgba(29,219,122,.12);border-left:1px solid var(--green);border-right:1px solid var(--green);pointer-events:none;display:none"></div>
             <div id="ze-track-ticks" style="position:absolute;inset:0"></div>
             <div id="ze-track-handle" style="position:absolute;top:-1px;bottom:-1px;width:5px;background:var(--text);border-radius:3px;box-shadow:0 0 0 3px rgba(240,240,240,.12)"></div>
           </div>
@@ -1709,7 +1716,8 @@ function selectRun(el,idx) {
 }
 
 // ── Zone Editor (visual only — no save/load yet) ──
-var ZE = { type:'brake', scrubD:0, cues:[], draggingId:null, selectedId:null, lenKm:8.3, descentM:240 };
+var ZE = { type:'brake', scrubD:0, cues:[], draggingId:null, selectedId:null, lenKm:8.3, descentM:240, zoom:1 };
+var ZE_ZOOM_LEVELS = [1, 2, 4, 8, 16];
 var ZE_COLORS = { brake:'#FF3B2F', warn:'#FFAA00', go:'#1DDB7A' };
 
 function ZE_profileFor(lenKm, descentM) {
@@ -2189,6 +2197,17 @@ async function ZE_saveCueZones() {
   if(btn){ btn.disabled=false; btn.textContent=originalLabel; }
 }
 
+function ZE_zoomIn() {
+  var idx = ZE_ZOOM_LEVELS.indexOf(ZE.zoom);
+  if(idx < ZE_ZOOM_LEVELS.length - 1) ZE.zoom = ZE_ZOOM_LEVELS[idx + 1];
+  ZE_render();
+}
+function ZE_zoomOut() {
+  var idx = ZE_ZOOM_LEVELS.indexOf(ZE.zoom);
+  if(idx > 0) ZE.zoom = ZE_ZOOM_LEVELS[idx - 1];
+  ZE_render();
+}
+
 function ZE_render() {
   var svg = document.getElementById('ze-chart');
   if(!svg) return;
@@ -2201,14 +2220,24 @@ function ZE_render() {
   }
   if(!ZE.cues.length) ZE.cues = ZE_seedCues(ZE.lenKm);
 
+  // Zoomed viewing window — centred on the current scrub position, clamped
+  // to stay within the trail. At 1x this is just the whole trail.
+  var windowKm = ZE.lenKm / ZE.zoom;
+  var windowStart = Math.max(0, Math.min(ZE.lenKm - windowKm, ZE.scrubD - windowKm/2));
+  var windowEnd = windowStart + windowKm;
+  ZE._windowStart = windowStart; ZE._windowEnd = windowEnd;
+
+  var zoomLbl = document.getElementById('ze-zoom-label');
+  if(zoomLbl) zoomLbl.textContent = ZE.zoom === 1 ? 'Full trail' : ZE.zoom + '&times; \u2014 ' + windowStart.toFixed(2) + '\u2013' + windowEnd.toFixed(2) + 'km';
+
   var profile = ZE_profileFor(ZE.lenKm, ZE.descentM);
   var elevs = profile.map(function(p){return p.e;});
   var minE = Math.min.apply(null, elevs), maxE = Math.max.apply(null, elevs);
   var W = 1000, H = 260, padL = 16, padR = 16, padTop = 14, padBottom = 30;
   var plotTop = padTop, plotBottom = H - padBottom, plotH = plotBottom - plotTop, plotW = W - padL - padR;
 
-  function xFor(d){ return padL + (d/ZE.lenKm)*plotW; }
-  function dFor(x){ return Math.max(0, Math.min(ZE.lenKm, ((x-padL)/plotW)*ZE.lenKm)); }
+  function xFor(d){ return padL + ((d-windowStart)/windowKm)*plotW; }
+  function dFor(x){ return Math.max(0, Math.min(ZE.lenKm, windowStart + ((x-padL)/plotW)*windowKm)); }
   function yFor(e){ return plotTop + (1 - (e-minE)/(maxE-minE)) * plotH; }
   function elevAt(d){
     var t = d/ZE.lenKm*(profile.length-1), i0=Math.floor(t), i1=Math.min(profile.length-1,i0+1), f=t-i0;
@@ -2260,9 +2289,9 @@ function ZE_render() {
   ph.setAttribute('stroke','#fff'); ph.setAttribute('stroke-width','1.5'); ph.setAttribute('stroke-dasharray','3 3'); ph.setAttribute('opacity','.8');
   svg.appendChild(ph);
 
-  [0, ZE.lenKm*0.5, ZE.lenKm].forEach(function(dd){
+  [windowStart, windowStart+windowKm*0.5, windowEnd].forEach(function(dd){
     var t = document.createElementNS(ns,'text'); t.setAttribute('x',xFor(dd)); t.setAttribute('y',H-10);
-    t.setAttribute('fill','#666'); t.setAttribute('font-size','13'); t.setAttribute('text-anchor', dd===0?'start':(dd===ZE.lenKm?'end':'middle'));
+    t.setAttribute('fill','#666'); t.setAttribute('font-size','13'); t.setAttribute('text-anchor', dd===windowStart?'start':(dd===windowEnd?'end':'middle'));
     t.textContent = dd.toFixed(2)+'km';
     svg.appendChild(t);
   });
@@ -2286,10 +2315,19 @@ function ZE_updatePlaceBtn(){
   if(btn) btn.textContent = 'Place Cue at ' + ZE.scrubD.toFixed(2) + 'km';
 }
 function ZE_updateTrack(){
-  var fill=document.getElementById('ze-track-fill'), handle=document.getElementById('ze-track-handle'), ticks=document.getElementById('ze-track-ticks');
+  var fill=document.getElementById('ze-track-fill'), handle=document.getElementById('ze-track-handle'), ticks=document.getElementById('ze-track-ticks'), viewport=document.getElementById('ze-track-viewport');
   var pct = (ZE.scrubD/ZE.lenKm*100);
   if(fill) fill.style.width = pct+'%';
   if(handle) handle.style.left = 'calc('+pct+'% - 2px)';
+  if(viewport){
+    if(ZE.zoom > 1 && ZE._windowStart !== undefined){
+      viewport.style.display = 'block';
+      viewport.style.left = (ZE._windowStart/ZE.lenKm*100)+'%';
+      viewport.style.width = ((ZE._windowEnd-ZE._windowStart)/ZE.lenKm*100)+'%';
+    } else {
+      viewport.style.display = 'none';
+    }
+  }
   if(ticks){
     ticks.innerHTML='';
     ZE.cues.forEach(function(c){
