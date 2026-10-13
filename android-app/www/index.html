@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MN8 Sight - Background Spike</title>
+<style>
+  :root { --bg:#111; --card:#1b1b1b; --fg:#eee; --muted:#9a9a9a; --green:#1DDB7A; --red:#FF3B2F; --amber:#FFAA00; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:max(16px, env(safe-area-inset-top)) 16px 32px; background:var(--bg); color:var(--fg); font:15px/1.4 system-ui, sans-serif; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  p.sub { margin:0 0 16px; color:var(--muted); font-size:13px; }
+  .card { background:var(--card); border-radius:12px; padding:14px; margin-bottom:12px; }
+  button { width:100%; padding:16px; border:0; border-radius:12px; font-size:17px; font-weight:700; margin-bottom:10px; }
+  #btn-start { background:var(--green); color:#04210f; }
+  #btn-stop  { background:var(--red); color:#fff; }
+  #btn-copy, #btn-clear, #btn-settings { background:#2a2a2a; color:var(--fg); font-size:14px; padding:12px; }
+  .row { display:flex; justify-content:space-between; padding:3px 0; }
+  .row b { font-variant-numeric:tabular-nums; }
+  #status { font-weight:700; }
+  #log { font:11px/1.35 ui-monospace, monospace; color:var(--muted); max-height:240px; overflow:auto; white-space:pre-wrap; }
+  .tip { font-size:12.5px; color:var(--muted); }
+</style>
+</head>
+<body>
+<h1>MN8 Sight - Background Spike</h1>
+<p class="sub">Tests: GPS with screen off, and whether cue tones still play.</p>
+
+<div class="card">
+  <div class="row"><span>Status</span><span id="status">Idle</span></div>
+  <div class="row"><span>GPS points</span><b id="s-points">0</b></div>
+  <div class="row"><span>Time since last point</span><b id="s-age">-</b></div>
+  <div class="row"><span>Biggest gap between points</span><b id="s-maxgap">-</b></div>
+  <div class="row"><span>Gaps over 10 s</span><b id="s-biggaps">0</b></div>
+  <div class="row"><span>Tones from GPS callback (low)</span><b id="s-tone-loc">0</b></div>
+  <div class="row"><span>Tones from timer (high)</span><b id="s-tone-timer">0</b></div>
+  <div class="row"><span>Speed</span><b id="s-speed">-</b></div>
+</div>
+
+<button id="btn-start">START TEST</button>
+<button id="btn-stop" hidden>STOP TEST</button>
+
+<div class="card tip">
+  <b>How to run it:</b> tap START and allow location (and notifications if asked). "While using the app" is fine; if it offers "Allow all the time", pick that.
+  Then press the power button to turn the screen off and walk or ride a loop for 5+ minutes.
+  Every 15 seconds you should hear a low tone (from a GPS point) and a high tone (from a timer).
+  Turn the screen on and read the numbers above.
+</div>
+
+<button id="btn-copy">COPY RESULTS</button>
+<button id="btn-settings">OPEN APP LOCATION SETTINGS</button>
+<button id="btn-clear">CLEAR LOG</button>
+<div class="card"><div id="log">Log appears here.</div></div>
+
+<script>
+(function () {
+  var BG = null;
+  try { BG = window.Capacitor && window.Capacitor.registerPlugin ? window.Capacitor.registerPlugin('BackgroundGeolocation') : null; } catch (e) {}
+  var native = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { running: false, watcherId: null, startedAt: 0, points: [], lastPointAt: 0, maxGap: 0, bigGaps: 0,
+                toneLoc: 0, toneTimer: 0, lastToneLoc: 0, timerHandle: null, ageHandle: null, ctx: null, lines: [] };
+
+  function fmtTime(ms) { return new Date(ms).toLocaleTimeString(); }
+  function log(msg) {
+    var line = fmtTime(Date.now()) + '  ' + msg;
+    state.lines.push(line);
+    if (state.lines.length > 400) state.lines.shift();
+    $('log').textContent = state.lines.slice(-60).join('\n');
+    $('log').scrollTop = $('log').scrollHeight;
+    try { localStorage.setItem('spike_log', JSON.stringify(state.lines)); } catch (e) {}
+  }
+  function setStatus(txt, color) { $('status').textContent = txt; $('status').style.color = color || ''; }
+
+  function beep(freq) {
+    try {
+      if (!state.ctx) return;
+      if (state.ctx.state === 'suspended') state.ctx.resume();
+      var o = state.ctx.createOscillator(), g = state.ctx.createGain();
+      o.type = 'sine'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, state.ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.5, state.ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, state.ctx.currentTime + 0.45);
+      o.connect(g); g.connect(state.ctx.destination);
+      o.start(); o.stop(state.ctx.currentTime + 0.5);
+    } catch (e) { log('tone error: ' + e.message); }
+  }
+
+  function refreshStats() {
+    $('s-points').textContent = state.points.length;
+    $('s-maxgap').textContent = state.maxGap ? (state.maxGap / 1000).toFixed(1) + ' s' : '-';
+    $('s-biggaps').textContent = state.bigGaps;
+    $('s-tone-loc').textContent = state.toneLoc;
+    $('s-tone-timer').textContent = state.toneTimer;
+    $('s-age').textContent = state.lastPointAt ? ((Date.now() - state.lastPointAt) / 1000).toFixed(0) + ' s' : '-';
+  }
+
+  function onLocation(loc) {
+    var now = Date.now();
+    if (state.lastPointAt) {
+      var gap = now - state.lastPointAt;
+      if (gap > state.maxGap) state.maxGap = gap;
+      if (gap > 10000) { state.bigGaps++; log('GAP of ' + (gap / 1000).toFixed(0) + ' s before this point'); }
+    }
+    state.lastPointAt = now;
+    state.points.push({ t: now, lat: loc.latitude, lon: loc.longitude, speed: loc.speed, acc: loc.accuracy });
+    $('s-speed').textContent = loc.speed != null ? (loc.speed * 3.6).toFixed(0) + ' km/h' : '-';
+    if (state.points.length <= 3 || state.points.length % 10 === 0) {
+      log('pt #' + state.points.length + ' ' + loc.latitude.toFixed(5) + ',' + loc.longitude.toFixed(5) + ' +/-' + Math.round(loc.accuracy) + 'm');
+    }
+    // Tone triggered from the GPS callback (this is how real cues fire)
+    if (now - state.lastToneLoc >= 15000) {
+      state.lastToneLoc = now; state.toneLoc++; beep(440);
+    }
+    refreshStats();
+  }
+
+  async function start() {
+    if (state.running) return;
+    if (!native || !BG) { setStatus('Not running natively', '#FF3B2F'); log('This page only works inside the Android app (Capacitor plugin missing).'); return; }
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      state.ctx = new AC(); await state.ctx.resume();
+    } catch (e) { log('audio init failed: ' + e.message); }
+
+    state.points = []; state.lastPointAt = 0; state.maxGap = 0; state.bigGaps = 0;
+    state.toneLoc = 0; state.toneTimer = 0; state.lastToneLoc = 0; state.startedAt = Date.now();
+    refreshStats();
+    setStatus('Starting...', '#FFAA00');
+
+    try {
+      state.watcherId = await BG.addWatcher({
+        backgroundTitle: 'MN8 Sight is tracking your ride',
+        backgroundMessage: 'Cues stay active with the screen off',
+        requestPermissions: true,
+        stale: false,
+        distanceFilter: 0
+      }, function (location, error) {
+        if (error) {
+          if (error.code === 'NOT_AUTHORIZED') {
+            log('Location not allowed. Open settings and choose "Allow all the time".');
+            setStatus('Location blocked', '#FF3B2F');
+          } else { log('GPS error: ' + (error.message || error.code)); }
+          return;
+        }
+        onLocation(location);
+      });
+      state.running = true;
+      $('btn-start').hidden = true; $('btn-stop').hidden = false;
+      setStatus('RUNNING', '#1DDB7A');
+      log('Watcher started (id ' + state.watcherId + '). Turn the screen off and move.');
+    } catch (e) {
+      setStatus('Failed to start', '#FF3B2F'); log('start failed: ' + (e.message || e));
+      return;
+    }
+
+    // Independent timer tone: shows whether JS timers/audio keep running with the screen off
+    state.timerHandle = setInterval(function () { state.toneTimer++; beep(880); refreshStats(); }, 15000);
+    state.ageHandle = setInterval(refreshStats, 1000);
+  }
+
+  async function stop() {
+    if (!state.running) return;
+    try { await BG.removeWatcher({ id: state.watcherId }); } catch (e) { log('stop error: ' + e.message); }
+    clearInterval(state.timerHandle); clearInterval(state.ageHandle);
+    state.running = false; state.watcherId = null;
+    $('btn-start').hidden = false; $('btn-stop').hidden = true;
+    setStatus('Stopped', '');
+    log('Stopped. ' + summary());
+  }
+
+  function summary() {
+    var mins = state.startedAt ? ((Date.now() - state.startedAt) / 60000) : 0;
+    var expected = Math.round(mins * 60); // roughly one point per second when GPS is healthy
+    return 'RESULT: ' + state.points.length + ' points in ' + mins.toFixed(1) + ' min (healthy is roughly ' + expected + '), '
+      + 'max gap ' + (state.maxGap / 1000).toFixed(1) + ' s, gaps>10s: ' + state.bigGaps
+      + ', GPS-callback tones: ' + state.toneLoc + ', timer tones: ' + state.toneTimer;
+  }
+
+  $('btn-start').addEventListener('click', start);
+  $('btn-stop').addEventListener('click', stop);
+  $('btn-clear').addEventListener('click', function () { state.lines = []; $('log').textContent = 'Log cleared.'; try { localStorage.removeItem('spike_log'); } catch (e) {} });
+  $('btn-settings').addEventListener('click', function () { if (BG && BG.openSettings) BG.openSettings(); });
+  $('btn-copy').addEventListener('click', function () {
+    var text = summary() + '\n\n' + state.lines.join('\n');
+    var done = function () { log('Results copied to clipboard.'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { log('Copy failed.'); });
+    else log('Clipboard unavailable.');
+  });
+
+  log(native ? 'Native Android shell detected. Ready.' : 'Not in the native app - open the installed Android build.');
+})();
+</script>
+</body>
+</html>

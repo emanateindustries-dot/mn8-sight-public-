@@ -1,0 +1,9 @@
+{
+  "appId": "com.mn8industries.sight",
+  "appName": "MN8 Sight",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": true
+  }
+}
