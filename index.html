@@ -892,7 +892,7 @@ function hide(id) {
 // ── ToS ──
 document.addEventListener('DOMContentLoaded', function() {
   var c1=document.getElementById('tos1'), c2=document.getElementById('tos2'), btn=document.getElementById('tos-btn');
-  function chk() { var ok=c1.checked&&c2.checked; btn.style.opacity=ok?'1':'0.4'; btn.style.pointerEvents=ok?'auto':'none'; }
+  function chk() { if(!c1||!c2||!btn) return; var ok=c1.checked&&c2.checked; btn.style.opacity=ok?'1':'0.4'; btn.style.pointerEvents=ok?'auto':'none'; }
   if(c1) c1.addEventListener('change',chk);
   if(c2) c2.addEventListener('change',chk);
   init();
@@ -900,9 +900,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function acceptToS() {
-  localStorage.setItem('mn8_tos','1.0');
+  try { localStorage.setItem('mn8_tos','1.0'); } catch(e) {}
   if(currentUser) {
-    await supa.from('profiles').upsert({id:currentUser.id,tos_accepted:true,tos_version:'1.0',tos_accepted_at:new Date().toISOString()});
+    try {
+      var tosRes = await supa.from('profiles').upsert({id:currentUser.id,tos_accepted:true,tos_version:'1.0',tos_accepted_at:new Date().toISOString()});
+      if(tosRes && tosRes.error) console.warn('APEX: ToS profile save failed', tosRes.error);
+    } catch(e) { console.warn('APEX: ToS profile save threw', e); }
   }
   hide('tos');
   showAuth('signin');
@@ -947,7 +950,9 @@ function onSignedIn() {
   var btn=document.getElementById('user-btn');
   if(btn&&currentUser) btn.textContent=currentUser.email.split('@')[0].toUpperCase().slice(0,6);
   hide('loading'); hide('signin'); hide('signup'); hide('tos');
-  if(!localStorage.getItem('mn8_onboarded')) {
+  var onboarded = false;
+  try { onboarded = !!localStorage.getItem('mn8_onboarded'); } catch(e) {}
+  if(!onboarded) {
     show('onboarding', true);
   } else {
     var appEl = document.getElementById('app'); if(appEl){appEl.style.display='flex';}
@@ -969,7 +974,7 @@ function selectOnboardingLevel(n, btn) {
 }
 
 function completeOnboarding() {
-  localStorage.setItem('mn8_onboarded','1');
+  try { localStorage.setItem('mn8_onboarded','1'); } catch(e) {}
   hide('onboarding');
   var appEl = document.getElementById('app'); if(appEl){appEl.style.display='flex';}
   stravaRefreshButtonLabel();
@@ -1083,7 +1088,7 @@ async function APEX_submitBugReport() {
   var text = input ? input.value.trim() : '';
   hide('bug-report-overlay');
   try {
-    await supa.from('client_errors').insert({
+    var bugRes = await supa.from('client_errors').insert({
       user_id: currentUser ? currentUser.id : null,
       kind: 'manual',
       user_note: text || '(no description given)',
@@ -1092,6 +1097,7 @@ async function APEX_submitBugReport() {
       build_marker: 'v4-alpha',
       user_agent: navigator.userAgent
     });
+    if(bugRes && bugRes.error) throw bugRes.error;
     APEX_showToast('Report sent — thanks!', '#1DDB7A');
   } catch(e) {
     console.warn('APEX: bug report submit failed', e);
@@ -1404,9 +1410,7 @@ function haversine(lat1,lon1,lat2,lon2) {
 // has nothing yet (cold start, offline, or Supabase unreachable) so the
 // app always has a working zone set.
 async function APEX_loadZones() {
-  var trailName='Southern Cross';
-  var el=document.getElementById('active-trail-name');
-  if(el && el.textContent) trailName=el.textContent;
+  var trailName = (typeof SELECTED_TRAIL !== 'undefined' && SELECTED_TRAIL && SELECTED_TRAIL.name) ? SELECTED_TRAIL.name : 'Southern Cross';
 
   try {
     var res = await supa.from('trail_zones')
@@ -1433,8 +1437,14 @@ async function APEX_loadZones() {
     console.warn('APEX: trail_zones fetch failed, using GPX baseline', e);
   }
 
-  // Cold start / fallback
-  APEX.zones=SC_ZONES.map(function(z,i){return Object.assign({},z,{id:i,fired:false});});
+  // Cold start / fallback — the hardcoded baseline only applies to Southern Cross.
+  // Any other trail with no learned zones yet just logs the ride (that data is what builds its zones).
+  if(trailName === 'Southern Cross') {
+    APEX.zones=SC_ZONES.map(function(z,i){return Object.assign({},z,{id:i,fired:false});});
+  } else {
+    APEX.zones=[];
+    APEX_showToast('No cues learned for this trail yet — ride it and Sight will start learning', '#FFAA00');
+  }
 }
 
 // Loads this rider's personal lead-time multiplier, learned by
@@ -1457,6 +1467,23 @@ async function APEX_loadCalibration() {
   }
 }
 
+var APEX_wakeLock = null;
+async function APEX_acquireWake() {
+  try {
+    if('wakeLock' in navigator && !APEX_wakeLock) {
+      APEX_wakeLock = await navigator.wakeLock.request('screen');
+      APEX_wakeLock.addEventListener('release', function(){ APEX_wakeLock = null; });
+    }
+  } catch(e) { console.warn('APEX: wake lock unavailable', e); }
+}
+function APEX_releaseWake() {
+  try { if(APEX_wakeLock) { APEX_wakeLock.release(); } } catch(e) {}
+  APEX_wakeLock = null;
+}
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && APEX.active) APEX_acquireWake();
+});
+
 async function APEX_start() {
   if(APEX.active) return;
   if(!navigator.geolocation) { APEX_updateStatus('GPS not available','#FF3B2F'); return; }
@@ -1467,6 +1494,9 @@ async function APEX_start() {
   APEX.sessionId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36);
   APEX.trackBuffer = [];
   APEX.cueBuffer = [];
+  APEX.pointsLogged = 0;
+  APEX.lastLog = 0;
+  APEX_acquireWake();
   APEX_updateStatus('APEX acquiring GPS…','#FFAA00');
   APEX.watchId=navigator.geolocation.watchPosition(
     function(pos) {
@@ -1478,7 +1508,13 @@ async function APEX_start() {
       // Log GPS point to buffer
       APEX_logPosition(pos);
     },
-    function(err){ APEX_updateStatus('GPS error: '+err.code,'#FF3B2F'); },
+    function(err){
+      var msg = err.code===1 ? 'Location blocked — allow location for this app in your phone settings, then restart the session'
+              : err.code===2 ? 'GPS signal unavailable — move to open sky and try again'
+              : err.code===3 ? 'GPS is slow to respond — keep riding, still trying…'
+              : 'GPS error — restart the session';
+      APEX_updateStatus(msg,'#FF3B2F');
+    },
     {enableHighAccuracy:true,maximumAge:500,timeout:10000}
   );
 }
@@ -1486,6 +1522,7 @@ async function APEX_start() {
 async function APEX_stop() {
   if(APEX.watchId!==null) navigator.geolocation.clearWatch(APEX.watchId);
   APEX.watchId=null; APEX.active=false;
+  APEX_releaseWake();
   APEX_updateStatus('APEX standby','#555555');
   hide('apex-live');
   var badge=document.getElementById('apex-badge');
@@ -2001,12 +2038,12 @@ async function STATS_loadLeaderboard(trailId) {
   try {
     var res = await supa.rpc('get_trail_leaderboard', { p_trail_id: trailId });
     if(res.error) throw res.error;
-    var rows = res.data || [];
+    var rows = (res.data || []).filter(function(r){ return r.best_raw_error != null && !isNaN(Number(r.best_raw_error)); });
     if(!rows.length) {
       list.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:var(--muted2)">No scores yet on this trail</div>';
       return;
     }
-    var errs = rows.map(function(r){ return r.best_raw_error; });
+    var errs = rows.map(function(r){ return Number(r.best_raw_error); });
     var crewBest = Math.min.apply(null, errs), crewWorst = Math.max.apply(null, errs);
     var scored = rows.map(function(r){
       var score = crewWorst===crewBest ? 100 : Math.max(0, Math.min(100, Math.round(100*(crewWorst-r.best_raw_error)/(crewWorst-crewBest))));
@@ -2497,6 +2534,7 @@ APEX.trackBuffer = [];  // GPS positions this session
 APEX.cueBuffer = [];    // Cue events this session
 APEX.logInterval = 3000; // Log position every 3 seconds
 APEX.lastLog = 0;
+APEX.pointsLogged = 0;
 
 function APEX_logPosition(pos) {
   var now = Date.now();
@@ -2516,8 +2554,10 @@ function APEX_logPosition(pos) {
     trail: SELECTED_TRAIL ? SELECTED_TRAIL.name : 'Unknown',
     trail_id: SELECTED_TRAIL ? SELECTED_TRAIL.id : null,
     conditions: trailCondition || 'dry',
-    rider_level: slider ? parseInt(slider.value) : 3
+    rider_level: slider ? parseInt(slider.value) : 3,
+    recorded_at: new Date(pos.timestamp || Date.now()).toISOString()
   });
+  APEX.pointsLogged = (APEX.pointsLogged || 0) + 1;
 
   // Batch insert every 10 points
   if(APEX.trackBuffer.length >= 10) {
@@ -2548,7 +2588,7 @@ async function APEX_batchInsertTrack() {
     return Object.assign({}, p, {
       user_id: currentUser.id,
       session_id: APEX.sessionId,
-      recorded_at: new Date().toISOString()
+      recorded_at: p.recorded_at || new Date().toISOString()
     });
   });
   try {
@@ -2563,7 +2603,8 @@ async function APEX_batchInsertTrack() {
 }
 
 async function APEX_flushSession() {
-  if(!currentUser) return;
+  if(!currentUser || !APEX.sessionId) return;
+  var flushSessionId = APEX.sessionId;
   // Flush remaining GPS points
   if(APEX.trackBuffer.length > 0) {
     await APEX_batchInsertTrack();
@@ -2605,13 +2646,15 @@ async function APEX_flushSession() {
       brake_zones: brakeZonesFired,
       commit_zones: APEX.zones.filter(function(z){ return z.type === 'offbrake' && z.fired; }).length,
       zones_fired: zonesFired,
-      gps_points: zonesFired
+      gps_points: APEX.pointsLogged || 0
     });
     if(runRes.error) throw runRes.error;
     console.log('APEX: Run summary saved');
   } catch(e) {
     console.warn('APEX: Run save failed', e);
   }
+
+  APEX.sessionId = null; // prevents a double-tap on Stop saving the run twice
 
   // Kick off zone refinement + calibration for this trail in the background.
   // Non-blocking and safe to fail silently if refine-zones hasn't been
