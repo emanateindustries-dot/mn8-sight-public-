@@ -512,8 +512,8 @@
           <svg id="ze-chart" viewBox="0 0 1000 260" preserveAspectRatio="none" style="width:100%;height:180px;display:block;touch-action:none"></svg>
           <div id="ze-readout" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(17,17,17,.92);border:1px solid var(--border2);border-radius:10px;padding:7px 14px;display:flex;gap:16px;pointer-events:none;opacity:0;transition:opacity .12s;white-space:nowrap">
             <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--text)" id="ze-r-dist">0.00km</div><div style="font-size:8px;letter-spacing:1px;color:var(--muted)">DIST</div></div>
-            <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--text)" id="ze-r-elev">—</div><div style="font-size:8px;letter-spacing:1px;color:var(--muted)">ELEV</div></div>
-            <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--text)" id="ze-r-grade">—</div><div style="font-size:8px;letter-spacing:1px;color:var(--muted)">GRADE</div></div>
+            <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--text)" id="ze-r-elev">—</div><div style="font-size:8px;letter-spacing:1px;color:var(--muted)">DROP LEFT</div></div>
+            <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--text)" id="ze-r-grade">—</div><div style="font-size:8px;letter-spacing:1px;color:var(--muted)">AVG GRADE</div></div>
           </div>
           <button id="ze-delete-btn" onclick="ZE_deleteSelected()" style="position:absolute;top:8px;right:8px;background:rgba(255,59,47,.15);border:1px solid var(--red);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--red);cursor:pointer;display:none">&#10005; Delete</button>
         </div>
@@ -1838,18 +1838,18 @@ function selectRun(el,idx) {
 }
 
 // ── Zone Editor (visual only — no save/load yet) ──
-var ZE = { type:'brake', scrubD:0, cues:[], draggingId:null, selectedId:null, lenKm:8.3, descentM:240, zoom:1 };
+var ZE = { type:'brake', scrubD:0, cues:[], draggingId:null, selectedId:null, lenKm:8.3, descentM:240, zoom:1, lenKnown:true, descKnown:true };
 var ZE_ZOOM_LEVELS = [1, 2, 4, 8, 16];
 var ZE_COLORS = { brake:'#FF3B2F', warn:'#FFAA00', go:'#1DDB7A' };
 
+// Honest baseline profile: a straight line from the trail's known total descent
+// down to 0 at the finish (height above the finish). No invented bumps - real
+// per-point elevation will replace this once a trail has ridden GPS data.
 function ZE_profileFor(lenKm, descentM) {
-  var pts = [], N = 60, seed = 7;
-  function rnd(){ seed=(seed*9301+49297)%233280; return seed/233280; }
+  var pts = [], N = 60;
   for(var i=0;i<=N;i++){
-    var t=i/N, dist=t*lenKm;
-    var roll = Math.sin(t*11)*4 + Math.sin(t*23+1)*2 + (rnd()-0.5)*1.6;
-    var e = 100 - t*(descentM*0.3) + roll;
-    pts.push({d:dist, e:e});
+    var t=i/N;
+    pts.push({d:t*lenKm, e:(descentM||0)*(1-t)});
   }
   return pts;
 }
@@ -2232,14 +2232,8 @@ async function ZE_saveTrailNotes() {
   if(btn){ btn.disabled=false; btn.textContent=originalLabel; }
 }
 
-function ZE_seedCues(lenKm) {
-  return [
-    {id:'ze1', type:'brake', d:lenKm*0.18},
-    {id:'ze2', type:'warn',  d:lenKm*0.42},
-    {id:'ze3', type:'go',    d:lenKm*0.58},
-    {id:'ze4', type:'brake', d:lenKm*0.81}
-  ];
-}
+// No made-up sample cues any more: a trail with no saved edits and no ridden data opens empty.
+function ZE_seedCues(lenKm) { return []; }
 
 function ZE_setType(t, btn) {
   ZE.type = t;
@@ -2335,12 +2329,18 @@ function ZE_render() {
   if(!svg) return;
 
   if(SELECTED_TRAIL) {
-    ZE.lenKm = parseFloat(SELECTED_TRAIL.length_km) || ZE.lenKm;
-    ZE.descentM = parseFloat(SELECTED_TRAIL.descent_m) || ZE.descentM;
+    // Never inherit the previous trail's numbers: use this trail's own data or flag it as unknown.
+    var _len = parseFloat(SELECTED_TRAIL.length_km);
+    var _descRaw = String(SELECTED_TRAIL.descent_m == null ? '' : SELECTED_TRAIL.descent_m);
+    var _desc = /min|:/i.test(_descRaw) ? NaN : parseFloat(_descRaw);
+    ZE.lenKnown = _len > 0;
+    ZE.descKnown = _desc > 0;
+    ZE.lenKm = ZE.lenKnown ? _len : 1.0;
+    ZE.descentM = ZE.descKnown ? _desc : 0;
     var sub = document.getElementById('ze-subtitle');
-    if(sub) sub.textContent = SELECTED_TRAIL.name + ' — scrub the trail and place cues';
+    if(sub) sub.textContent = SELECTED_TRAIL.name + (!ZE.lenKnown ? ' — trail length not known yet, distances are placeholders'
+      : (!ZE.descKnown ? ' — elevation not known yet' : (ZE.cues.length ? ' — scrub the trail and place cues' : ' — no cues yet: scrub and tap Place Cue')));
   }
-  if(!ZE.cues.length) ZE.cues = ZE_seedCues(ZE.lenKm);
 
   // Zoomed viewing window — centred on the current scrub position, clamped
   // to stay within the trail. At 1x this is just the whole trail.
@@ -2429,8 +2429,8 @@ function ZE_render() {
 function ZE_updateReadout(){
   var dist=document.getElementById('ze-r-dist'), elev=document.getElementById('ze-r-elev'), grade=document.getElementById('ze-r-grade');
   if(dist) dist.textContent = ZE.scrubD.toFixed(2)+'km';
-  if(elev && ZE._elevAt) elev.textContent = Math.round(ZE._elevAt(ZE.scrubD))+'m';
-  if(grade && ZE._gradeAt) { var g=ZE._gradeAt(ZE.scrubD); grade.textContent=(g>0?'+':'')+g.toFixed(1)+'%'; }
+  if(elev) elev.textContent = (ZE.descKnown && ZE._elevAt) ? Math.round(ZE._elevAt(ZE.scrubD))+'m' : '—';
+  if(grade) { if(ZE.descKnown && ZE.lenKnown && ZE._gradeAt) { var g=ZE._gradeAt(ZE.scrubD); grade.textContent=(g>0?'+':'')+g.toFixed(1)+'%'; } else grade.textContent='—'; }
 }
 function ZE_updatePlaceBtn(){
   var btn = document.getElementById('ze-place-btn');
